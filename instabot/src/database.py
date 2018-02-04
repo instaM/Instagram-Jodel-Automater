@@ -1,6 +1,7 @@
 import sqlite3
 import datetime
 import time 
+import os 
 class InstaDB:
   def __init__(self):
     self.blacklist_re = "blacklist_refollow"
@@ -8,7 +9,7 @@ class InstaDB:
     self.to_follow = "to_follow"
     self.all_follow = "all_follow"
     self.to_like = "to_like"
-    self.db = "/u/halle/bogusz/home_at/python/newinstabot/instabot/myinstabot/insta_db.sl3"
+    self.db = os.path.abspath('../db/insta_db.sl3')
     self.con = None 
     self.cur = None
     self.days_to_unfollow = 3
