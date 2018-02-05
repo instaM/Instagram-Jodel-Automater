@@ -1,9 +1,11 @@
-import jodel_api
 
+import jodel_api
 from geopy.geocoders import Nominatim
 from DBwrapper import DBWrapper
 class JodelBot:
     def __init__(self):
+        self.scanabtastrate = 5
+        self.scanradius = 3
         self.db = DBWrapper('jodel.db')
         self.citylist = ["Munich","Dusseldorf","Berlin","Hamburg","Rostock",
                          "Frankfurt am Main","Koln","Wien",
@@ -18,9 +20,19 @@ class JodelBot:
                                refresh_token=self.refresh_token, distinct_id= self.distinct_id, device_uid=self.device_uid, is_legacy=False)
     def getTopPost(self, city):
         geolocator = Nominatim()
-        self.j.set_location(geolocator.geocode(city).latitude,geolocator.geocode(city).longitude,city)
+        clat = geolocator.geocode(city).latitude - self.scanradius *self.scanabtastrate * 0.00898
+        clong = geolocator.geocode(city).longitude - self.scanradius*self.scanabtastrate * 0.00899
+        self.j.set_location(clat,clong,city)
         temp = self.j.get_posts_popular(skip=0, limit=1, after=None, mine=False, hashtag=None, channel=None)
+        for x in range(0,self.scanradius * 2):
+            for y in range(0,self.scanradius * 2):
+                self.j.set_location(clat,clong,city)
+                temp2 = self.j.get_posts_popular(skip=0, limit=1, after=None, mine=False, hashtag=None, channel=None)
 
+                if temp2[1]['posts'][0]['vote_count'] > temp[1]['posts'][0]['vote_count']:
+                    temp = temp2
+                clong = clong + self.scanabtastrate * 0.00899
+            clat = clat + self.scanabtastrate * 0.00898
         return (temp[1]['posts'][0]['message'],temp[1]['posts'][0]['vote_count'])
     def scanTopPost(self,minVotes):
         for c in self.citylist:
@@ -34,4 +46,6 @@ class JodelBot:
 
 
 jbot = JodelBot()
-jbot.scanTopPost(0)
+#jbot.scanTopPost(0)
+print(jbot.getTopPost("Munich"))
+
