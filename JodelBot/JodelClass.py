@@ -1,5 +1,6 @@
 
 import jodel_api
+import datetime
 from geopy.geocoders import Nominatim
 from DBwrapper import DBWrapper
 class JodelBot:
@@ -46,6 +47,6 @@ class JodelBot:
 
 
 jbot = JodelBot()
-#jbot.scanTopPost(0)
-print(jbot.getTopPost("Munich"))
+jbot.scanTopPost(800)
+
 
