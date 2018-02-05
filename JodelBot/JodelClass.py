@@ -1,9 +1,13 @@
-
 import jodel_api
-from geopy.geocoders import Nominatim
-class JodelBot:
 
+from geopy.geocoders import Nominatim
+from DBwrapper import DBWrapper
+class JodelBot:
     def __init__(self):
+        self.db = DBWrapper('jodel.db')
+        self.citylist = ["Munich","Dusseldorf","Berlin","Hamburg","Rostock",
+                         "Frankfurt am Main","Koln","Wien",
+                         "Stuttgart","Dortmund","Bremen","Essen","Bern"]
         self.lat, self.lng, self.city = 48.148434, 11.567867, "Munich"
         self.access_token = "81490906-56920392-3f8cb7a3-4604-42c7-9455-c797fe5a0831"
         self.expiration_date= 1518386290
@@ -17,12 +21,17 @@ class JodelBot:
         self.j.set_location(geolocator.geocode(city).latitude,geolocator.geocode(city).longitude,city)
         temp = self.j.get_posts_popular(skip=0, limit=1, after=None, mine=False, hashtag=None, channel=None)
 
-        return temp[1]['posts'][0]['message'] + " mit " + str(temp[1]['posts'][0]['vote_count']) + " Votes aus " + city
+        return (temp[1]['posts'][0]['message'],temp[1]['posts'][0]['vote_count'])
+    def scanTopPost(self,minVotes):
+        for c in self.citylist:
+           temp = self.getTopPost(c)
+           if temp[1] >= minVotes:
+              self.db.addTop(temp[0],temp[1],c)
+
     def accdata(self):
         print(self.j.get_account_data())
         return
 
 
 jbot = JodelBot()
-print(jbot.getTopPost("Dusseldorf"))
-
+jbot.scanTopPost(0)
