@@ -1,7 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import os
+import sys
+lib_path = os.path.abspath(os.path.join(__file__, '..', '..','..', 'apis', 'instagramapi_browser'))
+
+sys.path.append(lib_path)
 from database import InstaDB
-from InstagramAPI import InstagramAPI
+from instagramapi_browser import InstagramAPI
 import random
 import time
 import signal
@@ -57,6 +62,7 @@ class Instabot:
         self.timeline                   = {}
         signal.signal(signal.SIGTERM, self.cleanup)
         atexit.register(self.cleanup)
+        
     def init_tags(self):
         tag_list_left ={}
         for tag in self.tag_list:
@@ -86,58 +92,59 @@ class Instabot:
           return bad
       return None
     def worthy(self,info):
-     
-      if self.database.check_to_follow(info["user"]["pk"]) == True:
+      info = info["node"]
+      if self.database.check_to_follow(info["owner"]["id"]) == True:
         #print("Media %s and %s soon to be liked and followed!" %(info["pk"],info["user"]["username"]))
         return False
-      if info["like_count"] > self.max_likes_per_picture:
+      if info["edge_liked_by"]["count"] > self.max_likes_per_picture:
        # print("Media %s has too many likes" %(info["pk"]))
         return False
-      if info["user"]["friendship_status"]["following"] == True or self.database.check_following(info["user"]["pk"]):
+      if  self.database.check_following(info["owner"]["id"]):
        # print("You are already following %s" %(info["user"]["username"]))
         return False
-      if self.database.check_blacklist_refollow(info["user"]["pk"]) == False:
+      if self.database.check_blacklist_refollow(info["owner"]["id"]) == False:
        # print("You have followed  %s in the last 30 days"%(info["user"]["username"]))
         return False
-        
-      self.api.getUsernameInfo(info["user"]["pk"])
-      resp = self.api.LastJson
+      print(info["owner"]["id"])  
+      resp = self.api.getMediaInfo(info["shortcode"])
+      bad = self.containsBadKeyWord(resp["graphql"]["shortcode_media"]["owner"]["username"])
+      if  bad != None:
+       # print("%s contains %s !" %  (info["user"]["username"],bad))
+        return False 
       
-      if resp["user"]["follower_count"] > self.max_followers_on_follower:
+      resp = self.api.getUserInfo("",username=resp["graphql"]["shortcode_media"]["owner"]["username"])
+      if resp["user"]["followed_by"]["count"] > self.max_followers_on_follower:
         #print("%s has too many follower" % (info["user"]["username"]))
         return False
       
-      if resp["user"]["follower_count"] < self.min_followers_on_follower:
+      if resp["user"]["followed_by"]["count"] < self.min_followers_on_follower:
       #  print("%s has too little follower" % (info["user"]["username"]))
         return False
         
-      bad = self.containsBadKeyWord(info["user"]["username"])
-      if  bad != None:
-       # print("%s contains %s !" %  (info["user"]["username"],bad))
-        return False
-      return True    
+      
+      return resp["user"]["username"]
 
 
     def like_newsfeed(self):
       if(len(self.timeline) == 0):
-        self.api.getTimeline()
-        self.timeline= self.api.LastJson["items"]
+        self.timeline = self.api.getTimeline()
+        
 
       if(len(self.timeline) == 0):
         return False
-      if("pk" in self.timeline[0]):
-        if(self.timeline[0]["has_liked"] or ("ad_metadata" in self.timeline[0])):
+      if("id" in self.timeline[0]["node"]):
+        if(self.timeline[0]["node"]["viewer_has_liked"] or ("ad_metadata" in self.timeline[0]["node"])):
           del self.timeline[0]
           return False
-        self.api.like(self.timeline[0]["pk"])
+        self.api.like(self.timeline[0]["node"]["id"])
      
-        print("#%i Liked TimeLine-Media with id %s name : %s" %(self.like_newsfeed_count,self.timeline[0]["pk"],self.timeline[0]["user"]["username"]))
+        print("#%i Liked TimeLine-Media with id %s name : %s" %(self.like_newsfeed_count,self.timeline[0]["node"]["id"],self.timeline[0]["node"]["owner"]["username"]))
         del self.timeline[0]
         return True
       else:
         del self.timeline[0]
         return False
-
+    
     def like_and_follow(self):
       time.sleep(random.randint(3, 10))
       to_follow_list = self.database.get_to_follows()
@@ -149,8 +156,8 @@ class Instabot:
       self.database.delete_to_follow(follower[0])
       print("#%i Follow User %s" %(self.follow_count,follower[1])) 
       time.sleep(random.randint(7, 20))
-      self.api.like(follower[3])
-      print("#%i Liked Media with id %s" %(self.like_count,follower[3])) 
+      self.api.likeRandomUserMedia(follower[0],username=follower[1])
+      #print("#%i Liked Media with id %s" %(self.like_count,follower[3])) 
       return True
       
     def follow(self):
@@ -190,9 +197,8 @@ class Instabot:
       
       return True
     def get_random_tag(self,tag_list):
-      
-       
       return random.choice(tag_list)
+  
     def login(self):
       self.api = InstagramAPI("***REMOVED***","***REMOVED***")
       self.api.login()
@@ -231,11 +237,12 @@ class Instabot:
             del tag_list[tag_list.index(tag)]
             print("Now search on #%s"%(tag))
             print("Available Likes #%i"%(self.likes_per_tag_left[tag]))
-            tag_feed = self.get_tag_feed(tag,3)
+            tag_feed = self.api.getHashtagFeed(tag,3)
          
-          if (len(tag_feed) > 0 and self.worthy(tag_feed[0]) ):
-           
-             self.database.insert_to_follow(tag_feed[0]["user"]["pk"],tag_feed[0]["user"]["username"],tag,tag_feed[0]["pk"])
+          if (len(tag_feed) > 0   ):
+             username =self.worthy(tag_feed[0])
+             if (username != False):
+                self.database.insert_to_follow(tag_feed[0]["node"]["owner"]["id"],username,tag,tag_feed[0]["node"]["id"])
              
           if time.time() > self.next_iteration["Like_NewsFeed"] and self.period_like_newsfeed_count > 0 and self.like_newsfeed():
             self.like_newsfeed_count += 1
@@ -262,4 +269,4 @@ class Instabot:
        
     def cleanup(self):
       self.database.disconnect()
-      
+      self.api.logout()
