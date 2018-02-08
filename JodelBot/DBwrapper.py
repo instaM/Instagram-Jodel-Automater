@@ -19,8 +19,8 @@ class DBWrapper:
         self.conn.commit()
     def getTop(self,used = False): #
         c = self.conn.cursor()
-        c.execute("SELECT post, votes, city, color used From posts where votes = (SELECT Max(votes) from posts where used = ?) AND used = ? ",(int(used),int(used)))
-        temp = c.fetchall()
-        c.execute("UPDATE posts SET used = 1 where votes = (SELECT Max(votes) from posts) ")
+        c.execute("SELECT post, votes, city, color used From posts where votes = (SELECT Max(votes) from posts where used = ?) AND used = ?",(int(used),int(used)))
+        temp = c.fetchone()
+        c.execute("UPDATE posts SET used = 1 where votes = (SELECT Max(votes) and post = ? from posts) ",(temp[0],))
         self.conn.commit()
         return temp

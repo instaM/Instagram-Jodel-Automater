@@ -20,6 +20,15 @@ class JodelBot:
         self.refresh_token = "a19ad214-425b-4dc7-a19e-06aa0f9c12a8"
         self.j = jodel_api.JodelAccount(lat=self.lat, lng=self.lng, city=self.city,access_token=self.access_token, expiration_date=self.expiration_date,
                                refresh_token=self.refresh_token, distinct_id= self.distinct_id, device_uid=self.device_uid, is_legacy=False)
+    def getLastChar(t,c):
+        count = 0
+        for i in range(0,len(t)):
+          if t[i] == c:
+              count = i
+        return count
+    def getBestImage(self,used = False):
+        post = self.db.getTop(used)
+        return self.getImage(post[0],post[1],post[3])
     def getImage(self,text,votes,color):
         crgb = tuple(int(color[i:i + 2], 16) for i in (0, 2, 4))
         back = Image.new("RGB", (640,640), crgb)
@@ -27,15 +36,25 @@ class JodelBot:
         back.paste(front,(0,0),front)
         draw = ImageDraw.Draw(back)
         font = ImageFont.truetype("gbr.otf", 28)
+        fontVotes = ImageFont.truetype("gbr.otf", 28)
         splitLength = 28
-        textArray = [text[i:i+splitLength] for i in range(0, len(text), splitLength)]
+        textArray = text.split('\n')
+        for j in range(0,len(textArray)): #splittet  den text nach splitLength
+            if len(textArray[j]) > 28:
+                temp = [textArray[j].replace('\n','')[i:i + splitLength] for i in range(0, len(text), splitLength)]
+                textArray[j] = temp[0]
+                if len(temp)> 1:
+                    for i in range(1,len(temp)):
+                        textArray.insert(j + i,temp[i])
+        for x in textArray: #entfernt alle leerzeilen
+            if x == '':
+                textArray.remove(x)
         offset = len(textArray) * -16
-        for i in range(0, len(textArray)):
+        for i in range(0, len(textArray)): #printe alle zeilen auf den screen
             draw.text((40, 277 + offset + 32 * i), textArray[i], (255, 255, 255), font=font)
 
-        #draw.text((40, 290), text, (255, 255, 255), font=font)
-        draw.text((553, 273), str(votes), (255, 255, 255), font=font)
-        back.show()
+        draw.text((553, 273), str(votes), (255, 255, 255), font=fontVotes)
+        return back
 
     def getTopPost(self, city):
         geolocator = Nominatim()
@@ -66,7 +85,8 @@ class JodelBot:
 
 jbot = JodelBot()
 
-jbot.getImage("abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefgh",300,"9EC41C")
+#jbot.getImage("Hallo Sarah dein jodel",2,"FF0000")
+jbot.getBestImage(True).show()
 #print(jbot.getTopPost("Bremen"))
 #jbot.scanTopPost(0)
 
