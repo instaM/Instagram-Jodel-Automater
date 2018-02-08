@@ -18,8 +18,8 @@ class JodelBot:
         self.distinct_id = "5a7781f268566e001735a74e"
         self.device_uid= "d37e23334c45cf8d867ea7bc556b1e0e6d357e10eea0a22926b776c7b0031dcd"
         self.refresh_token = "a19ad214-425b-4dc7-a19e-06aa0f9c12a8"
-        self.j = jodel_api.JodelAccount(lat=self.lat, lng=self.lng, city=self.city,access_token=self.access_token, expiration_date=self.expiration_date,
-                               refresh_token=self.refresh_token, distinct_id= self.distinct_id, device_uid=self.device_uid, is_legacy=False)
+      #  self.j = jodel_api.JodelAccount(lat=self.lat, lng=self.lng, city=self.city,access_token=self.access_token, expiration_date=self.expiration_date,
+       #                        refresh_token=self.refresh_token, distinct_id= self.distinct_id, device_uid=self.device_uid, is_legacy=False)
     def getLastChar(t,c):
         count = 0
         for i in range(0,len(t)):
@@ -38,22 +38,30 @@ class JodelBot:
         font = ImageFont.truetype("gbr.otf", 28)
         fontVotes = ImageFont.truetype("gbr.otf", 28)
         splitLength = 28
-        textArray = text.split('\n')
-        for j in range(0,len(textArray)): #splittet  den text nach splitLength
-            if len(textArray[j]) > 28:
-                temp = [textArray[j].replace('\n','')[i:i + splitLength] for i in range(0, len(text), splitLength)]
-                textArray[j] = temp[0]
-                if len(temp)> 1:
-                    for i in range(1,len(temp)):
-                        textArray.insert(j + i,temp[i])
-        for x in textArray: #entfernt alle leerzeilen
-            if x == '':
-                textArray.remove(x)
-        offset = len(textArray) * -16
-        for i in range(0, len(textArray)): #printe alle zeilen auf den screen
-            draw.text((40, 277 + offset + 32 * i), textArray[i], (255, 255, 255), font=font)
-
-        draw.text((553, 273), str(votes), (255, 255, 255), font=fontVotes)
+        text = text.replace("\n\n", "\n")
+        textArray = text.split(" ")
+        tempS = ""
+        newString = ""
+        for x in textArray:
+            x = x + " "
+            if len(tempS) + len(x.replace('\n','')) < splitLength:
+                    tempS = tempS + x
+                    if '\n' in tempS:
+                        newString = newString + tempS
+                        tempS = ""
+            else: #falls laenger als die Maximalezeilen laenge
+                if x[0] != '\n':
+                    newString = newString + tempS + '\n' + x #falls in x noch kein new line
+                else:
+                    newString = newString + tempS + x #falls x ein newline beginnt kein new line noetig
+                tempS = ""
+        newString = newString + tempS #fuege den uebrig gebliebenen String hinzu
+        newArray = newString.split('\n')
+        offset = len(newArray) * -16
+        for i in range(0, len(newArray)): #printe alle zeilen auf den screen
+            draw.text((40, 277 + offset + 32 * i), newArray[i], (255, 255, 255), font=font)
+        offset = len(str(votes)) * -7
+        draw.text((575 + offset, 273), str(votes), (255, 255, 255), font=fontVotes)
         return back
 
     def getTopPost(self, city):
@@ -85,8 +93,8 @@ class JodelBot:
 
 jbot = JodelBot()
 
-#jbot.getImage("Hallo Sarah dein jodel",2,"FF0000")
-jbot.getBestImage(True).show()
+jbot.getImage("Hallo Sarah dein jodel",2,"FF0000").show()
+#jbot.getBestImage(True).show()
 #print(jbot.getTopPost("Bremen"))
 #jbot.scanTopPost(0)
 
