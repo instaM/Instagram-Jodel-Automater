@@ -18,8 +18,8 @@ class JodelBot:
         self.distinct_id = "5a7781f268566e001735a74e"
         self.device_uid= "d37e23334c45cf8d867ea7bc556b1e0e6d357e10eea0a22926b776c7b0031dcd"
         self.refresh_token = "a19ad214-425b-4dc7-a19e-06aa0f9c12a8"
-      #  self.j = jodel_api.JodelAccount(lat=self.lat, lng=self.lng, city=self.city,access_token=self.access_token, expiration_date=self.expiration_date,
-       #                        refresh_token=self.refresh_token, distinct_id= self.distinct_id, device_uid=self.device_uid, is_legacy=False)
+        self.j = jodel_api.JodelAccount(lat=self.lat, lng=self.lng, city=self.city,access_token=self.access_token, expiration_date=self.expiration_date,
+                               refresh_token=self.refresh_token, distinct_id= self.distinct_id, device_uid=self.device_uid, is_legacy=False)
     def getLastChar(t,c):
         count = 0
         for i in range(0,len(t)):
@@ -91,10 +91,5 @@ class JodelBot:
         return
 
 
-jbot = JodelBot()
 
-jbot.getImage("Hallo Sarah dein jodel",2,"FF0000").show()
-#jbot.getBestImage(True).show()
-#print(jbot.getTopPost("Bremen"))
-#jbot.scanTopPost(0)
 
