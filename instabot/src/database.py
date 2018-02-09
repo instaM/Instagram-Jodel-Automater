@@ -26,7 +26,6 @@ class InstaDB:
     self.cur.execute("REPLACE INTO %s VALUES('%s','%s','%s')" % (self.blacklist_re,uni_id,name,str(datetime.date.today()+datetime.timedelta(days=self.days_to_refollow ))))
     self.con.commit()
   def insert_follower(self,uni_id,name,whitelist,date,hashtag):
-    print("Insert %s    %s "%(uni_id,name))
     self.cur.execute("REPLACE INTO %s VALUES('%s','%s',%i,'%s')" % (self.following,uni_id,name,whitelist,str(date)))
     self.cur.execute("REPLACE INTO %s VALUES('%s','%s','%s')" % (self.all_follow,uni_id,name,hashtag))
     self.con.commit()
@@ -57,6 +56,11 @@ class InstaDB:
     if not row : return False
    
     return True
+  def get_following_all(self):
+    self.cur.execute("SELECT * from %s" % (self.following))
+    row = self.cur.fetchall()
+    
+    return row
   def get_to_follows(self):
     self.cur.execute("SELECT * from %s limit 20" % (self.to_follow))
     row = self.cur.fetchall()
@@ -75,7 +79,7 @@ class InstaDB:
     return row
   def delete_follower(self,uni_id):
     self.delete(uni_id,self.following)
-    
+  
   def delete_to_follow(self,uni_id):
     self.delete(uni_id,self.to_follow)
     
