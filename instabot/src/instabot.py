@@ -105,14 +105,18 @@ class Instabot:
       if self.database.check_blacklist_refollow(info["owner"]["id"]) == False:
        # print("You have followed  %s in the last 30 days"%(info["user"]["username"]))
         return False
-      print(info["owner"]["id"])  
+     
       resp = self.api.getMediaInfo(info["shortcode"])
+      if(resp == None):
+        return False
       bad = self.containsBadKeyWord(resp["graphql"]["shortcode_media"]["owner"]["username"])
       if  bad != None:
        # print("%s contains %s !" %  (info["user"]["username"],bad))
         return False 
       
       resp = self.api.getUserInfo("",username=resp["graphql"]["shortcode_media"]["owner"]["username"])
+      if(resp == None):
+        return False
       if resp["user"]["followed_by"]["count"] > self.max_followers_on_follower:
         #print("%s has too many follower" % (info["user"]["username"]))
         return False
@@ -200,7 +204,7 @@ class Instabot:
       return random.choice(tag_list)
   
     def login(self):
-      self.api = InstagramAPI("thefineclubs","BaQDWf8HeP1")
+      self.api = InstagramAPI("martinr0x","BaQDWf8HeP1")
       self.api.login()
       self.database.connect()
     def reset_period_counter(self):
@@ -265,7 +269,8 @@ class Instabot:
             self.next_iteration["Unfollow"] = time.time() + self.between_unfollow
             time.sleep(random.randint(7, 20))
           time.sleep(3) 
-          del tag_feed[0]
+          if( len(tag_feed) > 0):
+            del tag_feed[0]
        
     def cleanup(self):
       self.database.disconnect()
