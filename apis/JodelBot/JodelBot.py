@@ -68,7 +68,7 @@ class JodelBot:
         offset = len(str(votes)) * -7
         draw.text((575 + offset, 273), str(votes), (255, 255, 255), font=fontVotes)
         draw.text((65, 600), city, (255, 255, 255), font=fontCity)
-        return back
+        return (back,city)
 
     def getTopPost(self, city):
         geolocator = Nominatim()

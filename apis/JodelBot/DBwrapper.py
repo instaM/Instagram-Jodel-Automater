@@ -3,11 +3,8 @@ class DBWrapper:
     def __init__(self,dbname):
         self.conn = sqlite3.connect(dbname)
         c = self.conn.cursor()
-        try:
-            c.execute('''CREATE TABLE posts (post varchar(1000), votes int, city varchar(255),color varchar(255),used int)''')
-            self.conn.commit()
-        except:
-            return
+        c.execute("CREATE TABLE IF NOT EXISTS posts (post varchar(1000), votes int, city varchar(255),color varchar(255),used int)")
+        self.conn.commit()
     def addTop(self,text, votes,color,city):
         c = self.conn.cursor()
         c.execute("Select count(*) from posts where post = ? AND city = ?",(text,city))
