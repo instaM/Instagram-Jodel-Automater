@@ -154,7 +154,7 @@ class Instabot:
         path = os.path.abspath('') + "/temp.jpg"
         #img[0].show()
         img[0].save(path,quality = 100)
-        self.post_instagram_api.upload(path,self.post_caption %(img[1]))
+        self.post_instagram_api.upload(path,(self.post_caption %(img[1])))
 
     def like_newsfeed(self):
       if(len(self.timeline) == 0):
