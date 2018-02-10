@@ -8,8 +8,8 @@ from DBwrapper import DBWrapper
 
 class JodelBot:
     def __init__(self):
-        self.scanabtastrate = 5
-        self.scanradius = 3
+        self.scanabtastrate = 8
+        self.scanradius = 2
         self.db = DBWrapper('jodel.db')
         self.citylist = ["Muenchen","Duesseldorf","Berlin","Hamburg","Rostock",
                          "Frankfurt am Main","Koeln","Wien",
