@@ -42,6 +42,9 @@ class JodelBot:
         splitLength = 28
         text = text.replace("\n\n", "\n")
         textArray = text.split(" ")
+        for i in range(0,len(textArray)):
+            if len(textArray[i]) > splitLength:
+                textArray[i] = textArray[i][:27] + '\n' + textArray[i][27:]
         tempS = ""
         newString = ""
         for x in textArray:
