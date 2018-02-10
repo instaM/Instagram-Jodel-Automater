@@ -26,6 +26,6 @@ class DBWrapper:
             c.execute("SELECT post, votes, city, color used From posts where votes = (SELECT Max(votes) from posts where used = 0) AND used = 0")
         temp = c.fetchone()
         if temp is not None:
-            c.execute("UPDATE posts SET used = 1 where votes = (SELECT Max(votes) and post = ? from posts) ",(temp[0],))
+            c.execute("UPDATE posts SET used = 1 where post = ? ",(temp[0],))
             self.conn.commit()
         return temp
