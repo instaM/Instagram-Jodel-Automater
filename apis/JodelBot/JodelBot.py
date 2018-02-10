@@ -30,19 +30,23 @@ class JodelBot:
                 self.j = jodel_api.JodelAccount(lat=self.lat, lng=self.lng, city=self.city,access_token=self.access_token, expiration_date=self.expiration_date,
                                refresh_token=self.refresh_token, distinct_id= self.distinct_id, device_uid=self.device_uid, is_legacy=False)
                 logging.info("Successful connected to Jodel")
+                print("Successful connected to Jodel")
                 break;
             except:
                 logging.warning("Could not connect to Jodel retry...")
+                print("Could not connect to Jodel retry...")
                 time.sleep(5000)
 
     def getBestImage(self,used = False):
         post = self.db.getTop(used)
         if post is None:
             logging.warning("Could not find a top Post, rescanning...")
+            print("Could not find a top Post, rescanning...")
             self.scanTopPost(200)
             return self.getBestImage(used)
         if post[0] == "":
-            logging.warning("Found an empty String load new")
+            logging.warning("Found an empty String load new one")
+            print("Found an empty String load new one")
             return self.getBestImage()
         return self.getImage(post[0],post[1],post[2],post[3])
     def getImage(self,text,votes,city,color):
