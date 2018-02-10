@@ -20,7 +20,7 @@ class Instabot:
     def __init__(self):
         self.username                   = "topdailyjodel"
         self.passwort                   =  "resurrect123"
-        self.post_caption               = u"Dein täglicher Jodel!\nFolge @topdailyjodel für lustige Jodel aus ganz Deutschland \n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n#%s#fun #jodel #germany #instajodel #jodelgermany #funnyquote #quote #quoteoftheday #instafun #jodelapp #funny #study #uni #university #student #lifestyle #studentenlifestyle #lustig #sprüche #"
+        self.post_caption               = u"Dein täglicher Jodel!\nFolge @topdailyjodel für lustige Jodel aus ganz Deutschland \n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n#%s#fun #jodel #germany #instajodel #jodelgermany #funnyquote #quote #quoteoftheday #instafun #jodelapp #funny #study #uni #university #student #lifestyle #studentenlifestyle #lustig #sprüche"
         self.max_followers_per_hour     = 0
         self.max_unfollows_per_hour     = 0
         self.max_likes_per_hour         = 1
@@ -154,7 +154,7 @@ class Instabot:
         path = os.path.abspath('') + "/temp.jpg"
         #img[0].show()
         img[0].save(path,quality = 100)
-        self.post_instagram_api.upload(path,(self.post_caption + (img[1])))
+        self.post_instagram_api.upload(path,(self.post_caption  %(img[1])))
 
     def like_newsfeed(self):
       if(len(self.timeline) == 0):
