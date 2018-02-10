@@ -1,17 +1,19 @@
+# -*- coding: iso-8859-1 -*-
 import jodel_api
 from PIL import Image
 from PIL import ImageFont
 from PIL import ImageDraw
 from geopy.geocoders import Nominatim
 from DBwrapper import DBWrapper
+
 class JodelBot:
     def __init__(self):
         self.scanabtastrate = 5
         self.scanradius = 3
         self.db = DBWrapper('jodel.db')
-        self.citylist = ["Munich","Dusseldorf","Berlin","Hamburg","Rostock",
-                         "Frankfurt am Main","Koln","Wien",
-                         "Stuttgart","Dortmund","Bremen","Essen","Bern","Heidelberg","Tubingen"]
+        self.citylist = ["Muenchen","Duesseldorf","Berlin","Hamburg","Rostock",
+                         "Frankfurt am Main","Koeln","Wien",
+                         "Stuttgart","Dortmund","Bremen","Essen","Bern","Heidelberg","Tuebingen"]
         self.lat, self.lng, self.city = 48.148434, 11.567867, "Munich"
         self.access_token = "81490906-56920392-3f8cb7a3-4604-42c7-9455-c797fe5a0831"
         self.expiration_date= 1518386290
@@ -20,12 +22,6 @@ class JodelBot:
         self.refresh_token = "a19ad214-425b-4dc7-a19e-06aa0f9c12a8"
         self.j = jodel_api.JodelAccount(lat=self.lat, lng=self.lng, city=self.city,access_token=self.access_token, expiration_date=self.expiration_date,
                                refresh_token=self.refresh_token, distinct_id= self.distinct_id, device_uid=self.device_uid, is_legacy=False)
-    def getLastChar(t,c):
-        count = 0
-        for i in range(0,len(t)):
-          if t[i] == c:
-              count = i
-        return count
     def getBestImage(self,used = False):
         post = self.db.getTop(used)
         if post is None:
@@ -40,6 +36,9 @@ class JodelBot:
         font = ImageFont.truetype("gbr.otf", 28)
         fontVotes = ImageFont.truetype("gbr.otf", 28)
         fontCity = ImageFont.truetype("gbr.otf", 20)
+        #city = city.replace("ue","ü")
+        #city = city.replace("ae", "ä")
+        #city = city.replace("oe", "ö")
         splitLength = 28
         text = text.replace("\n\n", "\n")
         textArray = text.split(" ")
@@ -77,6 +76,7 @@ class JodelBot:
         clong = geolocator.geocode(city).longitude - self.scanradius*self.scanabtastrate * 0.00899
         self.j.set_location(clat,clong,city)
         temp = self.j.get_posts_popular(skip=0, limit=1, after=None, mine=False, hashtag=None, channel=None)
+        print("Scanning " + city)
         for x in range(0,self.scanradius * 2):
             for y in range(0,self.scanradius * 2):
                 self.j.set_location(clat,clong,city)
@@ -96,7 +96,6 @@ class JodelBot:
     def accdata(self):
         print(self.j.get_account_data())
         return
-
 
 
 
