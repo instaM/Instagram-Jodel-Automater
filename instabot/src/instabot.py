@@ -56,7 +56,7 @@ class Instabot:
         self.period_like_newsfeed_count        = self.max_like_newsfeed_per_period
         self.database                   = InstaDB()
         self.api                        = None
-        self.next_iteration             = {"Like": 0, "Follow": 0, "Unfollow": 0, "Like_NewsFeed": 0}
+        self.next_iteration             = {"Like": 0, "Follow": 0, "Unfollow": time.time()+(self.between_unfollow/2), "Like_NewsFeed": 0}
         self.start_time                 = 0.0
         self.end_time                   = 0.0
         self.timeline                   = {}
@@ -109,6 +109,8 @@ class Instabot:
       resp = self.api.getMediaInfo(info["shortcode"])
       if(resp == None):
         return False
+      if(resp["graphql"]["shortcode_media"]["owner"]["followed_by_viewer"]):
+        return False
       bad = self.containsBadKeyWord(resp["graphql"]["shortcode_media"]["owner"]["username"])
       if  bad != None:
        # print("%s contains %s !" %  (info["user"]["username"],bad))
@@ -117,6 +119,8 @@ class Instabot:
       resp = self.api.getUserInfo("",username=resp["graphql"]["shortcode_media"]["owner"]["username"])
       if(resp == None):
         return False
+      
+      
       if resp["user"]["followed_by"]["count"] > self.max_followers_on_follower:
         #print("%s has too many follower" % (info["user"]["username"]))
         return False
@@ -150,7 +154,7 @@ class Instabot:
         return False
     
     def like_and_follow(self):
-      time.sleep(random.randint(3, 10))
+      
       to_follow_list = self.database.get_to_follows()
       if(len(to_follow_list) == 0):
         return False
@@ -242,17 +246,18 @@ class Instabot:
             print("Now search on #%s"%(tag))
             print("Available Likes #%i"%(self.likes_per_tag_left[tag]))
             tag_feed = self.api.getHashtagFeed(tag,3)
-         
-          if (len(tag_feed) > 0   ):
-             username =self.worthy(tag_feed[0])
-             if (username != False):
-                self.database.insert_to_follow(tag_feed[0]["node"]["owner"]["id"],username,tag,tag_feed[0]["node"]["id"])
+          
+          if (len(tag_feed) > 0  and self.database.get_to_follow_count() < 30 ):
+            username = self.worthy(tag_feed[0])
+            if (username != False):
+              self.database.insert_to_follow(tag_feed[0]["node"]["owner"]["id"],username,tag,tag_feed[0]["node"]["id"])
+            del tag_feed[0]
              
           if time.time() > self.next_iteration["Like_NewsFeed"] and self.period_like_newsfeed_count > 0 and self.like_newsfeed():
             self.like_newsfeed_count += 1
             self.period_like_newsfeed_count -=1
             self.next_iteration["Like_NewsFeed"] = time.time() + self.between_like_newsfeed 
-            time.sleep(random.randint(3, 20))
+            #time.sleep(random.randint(3, 20))
 
           if time.time() > self.next_iteration["Follow"] and self.period_follow_count > 0 and self.like_and_follow():
             self.follow_count += 1
@@ -262,15 +267,14 @@ class Instabot:
             self.next_iteration["Follow"] = time.time() + self.between_follow
             self.next_iteration["Like"] = time.time() + self.between_like
             print("Period Count : #%s"%(period_count))
-            time.sleep(random.randint(7, 20))
+            #time.sleep(random.randint(7, 20))
           if time.time() > self.next_iteration["Unfollow"] and self.period_unfollow_count > 0 and self.unfollow():  
             self.unfollow_count += 1
             self.period_unfollow_count -= 1
             self.next_iteration["Unfollow"] = time.time() + self.between_unfollow
-            time.sleep(random.randint(7, 20))
+            #time.sleep(random.randint(7, 20))
           time.sleep(3) 
-          if( len(tag_feed) > 0):
-            del tag_feed[0]
+         
        
     def cleanup(self):
       self.database.disconnect()

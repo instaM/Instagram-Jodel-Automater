@@ -77,6 +77,11 @@ class InstaDB:
     row = self.cur.fetchall()
     
     return row
+  def get_to_follow_count(self):
+    self.cur.execute("SELECT count(*) from %s" %(self.to_follow))
+
+    res = self.cur.fetchone()
+    return res[0]
   def delete_follower(self,uni_id):
     self.delete(uni_id,self.following)
   
