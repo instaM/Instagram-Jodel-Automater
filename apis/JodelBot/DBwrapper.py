@@ -1,6 +1,7 @@
 import sqlite3
 class DBWrapper:
     def __init__(self,dbname):
+        print(dbname)
         self.conn = sqlite3.connect(dbname)
         c = self.conn.cursor()
         c.execute("CREATE TABLE IF NOT EXISTS posts (post varchar(1000), votes int, city varchar(255),color varchar(255),used int)")

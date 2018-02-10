@@ -1,5 +1,6 @@
 # -*- coding: iso-8859-1 -*-
 import jodel_api
+import os
 from PIL import Image
 from PIL import ImageFont
 from PIL import ImageDraw
@@ -10,7 +11,7 @@ class JodelBot:
     def __init__(self):
         self.scanabtastrate = 8
         self.scanradius = 2
-        self.db = DBWrapper('jodel.db')
+        self.db = DBWrapper(os.path.abspath(os.path.join(__file__,"..",'jodel.db')))
         self.citylist = ["Muenchen","Duesseldorf","Berlin","Hamburg","Rostock",
                          "Frankfurt am Main","Koeln","Wien",
                          "Stuttgart","Dortmund","Bremen","Essen","Bern","Heidelberg","Tuebingen"]
@@ -25,17 +26,18 @@ class JodelBot:
     def getBestImage(self,used = False):
         post = self.db.getTop(used)
         if post is None:
+            
             return
         return self.getImage(post[0],post[1],post[2],post[3])
     def getImage(self,text,votes,city,color):
         crgb = tuple(int(color[i:i + 2], 16) for i in (0, 2, 4))
         back = Image.new("RGB", (640,640), crgb)
-        front = Image.open("elements.png")
+        front = Image.open( os.path.abspath(os.path.join(__file__, '..' ,"elements.png")))
         back.paste(front,(0,0),front)
         draw = ImageDraw.Draw(back)
-        font = ImageFont.truetype("gbr.otf", 28)
-        fontVotes = ImageFont.truetype("gbr.otf", 28)
-        fontCity = ImageFont.truetype("gbr.otf", 20)
+        font = ImageFont.truetype(os.path.abspath(os.path.join(__file__, '..' ,"gbr.otf")), 28)
+        fontVotes = ImageFont.truetype(os.path.abspath(os.path.join(__file__, '..' ,"gbr.otf")), 28)
+        fontCity = ImageFont.truetype(os.path.abspath(os.path.join(__file__, '..' ,"gbr.otf")), 20)
         #city = city.replace("ue","ü")
         #city = city.replace("ae", "ä")
         #city = city.replace("oe", "ö")
@@ -68,6 +70,7 @@ class JodelBot:
         offset = len(str(votes)) * -7
         draw.text((575 + offset, 273), str(votes), (255, 255, 255), font=fontVotes)
         draw.text((65, 600), city, (255, 255, 255), font=fontCity)
+        
         return (back,city)
 
     def getTopPost(self, city):

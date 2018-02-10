@@ -2,30 +2,40 @@
 # -*- coding: utf-8 -*-
 import os
 import sys
+lib_path = os.path.abspath(os.path.join(__file__, '..', '..','..', 'apis', 'JodelBot'))
+sys.path.append(lib_path)
 lib_path = os.path.abspath(os.path.join(__file__, '..', '..','..', 'apis', 'instagramapi_browser'))
 
 sys.path.append(lib_path)
 from database import InstaDB
 from instagramapi_browser import InstagramAPI
+from JodelBot import JodelBot
+from PIL import Image
+from instapy_cli.cli import InstapyCli
 import random
 import time
 import signal
 import atexit
 class Instabot:
     def __init__(self):
-        self.max_followers_per_hour     = 21
-        self.max_unfollows_per_hour     = 21
-        self.max_likes_per_hour         = 21
-        self.max_like_newsfeed_per_hour = 8
+        self.username                   = "topdailyjodel"
+        self.passwort                   =  "resurrect123"
+        self.post_caption               = "Dein täglicher Jodel!\nFolge @topdailyjodel für lustige Jodel aus ganz Deutschland \n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n#%s#fun #jodel #germany #instajodel #jodelgermany #funnyquote #quote #quoteoftheday #instafun #jodelapp #funny #study #uni #university #student #lifestyle #studentenlifestyle #lustig #sprüche"
+        self.max_followers_per_hour     = 0
+        self.max_unfollows_per_hour     = 0
+        self.max_likes_per_hour         = 1
+        self.max_like_newsfeed_per_hour = 0
+        self.max_posts_per_day          = 8
         self.period                     = 60*60
         self.max_followers_per_period             = self.max_followers_per_hour * (self.period/(60*60))
         self.max_unfollows_per_period             = self.max_unfollows_per_hour * (self.period/(60*60))
         self.max_likes_per_period                 = self.max_likes_per_hour * (self.period/(60*60))
-        self.max_like_newsfeed_per_period       = self.max_like_newsfeed_per_hour * (self.period/(60*60))
-        self.between_like               = (self.period)/self.max_likes_per_period
-        self.between_like_newsfeed      = (self.period)/self.max_like_newsfeed_per_period
-        self.between_follow             = (self.period)/self.max_followers_per_period
-        self.between_unfollow           = (self.period)/self.max_unfollows_per_period
+        self.max_like_newsfeed_per_period         = self.max_like_newsfeed_per_hour * (self.period/(60*60))
+        self.between_like               = self.safe_div(self.period,self.max_likes_per_period)
+        self.between_like_newsfeed      = self.safe_div(self.period,self.max_like_newsfeed_per_period)
+        self.between_follow             = self.safe_div(self.period,self.max_followers_per_period)
+        self.between_unfollow           = self.safe_div(self.period,self.max_unfollows_per_period)
+        self.between_post               = self.safe_div(60*60*24,self.max_posts_per_day)
         
         self.time_to_unfollow           = 3*60*60*24
         self.days_to_refollow           = 30
@@ -56,13 +66,18 @@ class Instabot:
         self.period_like_newsfeed_count        = self.max_like_newsfeed_per_period
         self.database                   = InstaDB()
         self.api                        = None
-        self.next_iteration             = {"Like": 0, "Follow": 0, "Unfollow": time.time()+(self.between_unfollow/2), "Like_NewsFeed": 0}
+        self.get_post_api               = JodelBot()
+        self.post_instagram_api         = None
+        self.next_iteration             = {"Like": 0, "Follow": 0, "Unfollow": time.time()+(self.between_unfollow/2), "Like_NewsFeed": 0,"Post":0}
         self.start_time                 = 0.0
         self.end_time                   = 0.0
         self.timeline                   = {}
         signal.signal(signal.SIGTERM, self.cleanup)
         atexit.register(self.cleanup)
-        
+    def safe_div(self,x,y):
+        if y == 0:
+            return 0
+        return x / y        
     def init_tags(self):
         tag_list_left ={}
         for tag in self.tag_list:
@@ -132,6 +147,14 @@ class Instabot:
       
       return resp["user"]["username"]
 
+    def post_picture(self):
+        #print(os.path.abspath(os.path.join(__file__)))
+        self.get_post_api.scanTopPost(400)
+        img = self.get_post_api.getBestImage()
+        path = os.path.abspath('') + "/temp.jpg"
+        #img[0].show()
+        img[0].save(path)
+        self.post_instagram_api.upload(path,self.post_caption %(img[1]))
 
     def like_newsfeed(self):
       if(len(self.timeline) == 0):
@@ -208,9 +231,13 @@ class Instabot:
       return random.choice(tag_list)
   
     def login(self):
-      self.api = InstagramAPI("***REMOVED***","***REMOVED***")
+      self.api = InstagramAPI(self.username,self.passwort)
       self.api.login()
       self.database.connect()
+      
+      time.sleep(random.randint(15, 30))
+
+      self.post_instagram_api= InstapyCli(self.username,self.passwort)
     def reset_period_counter(self):
       print ("This time period #%i Media got liked"      %(self.max_likes_per_period-self.period_like_count))
       print ("This time period #%i Accounts got followed"%(self.max_followers_per_period-self.period_follow_count))
@@ -231,13 +258,13 @@ class Instabot:
         print("Unfollow every %i seconds"% (self.between_unfollow))
         print("Like every %i seconds"% (self.between_like))
         print("Like every %i seconds"% (self.between_like_newsfeed))
-       
+        print("Post every %i seconds"% (self.between_post))
         while True:
           if(time.time() > self.end_time):
             self.reset_period_counter()
             self.end_time = time.time()+self.period
             period_count += 1
-          if len(tag_feed) == 0:
+          if len(tag_feed) > 0:
             if len(tag_list) == 0:
               tag_list = self.tag_list[:]
               
@@ -252,7 +279,11 @@ class Instabot:
             if (username != False):
               self.database.insert_to_follow(tag_feed[0]["node"]["owner"]["id"],username,tag,tag_feed[0]["node"]["id"])
             del tag_feed[0]
-             
+          
+          if time.time() > self.next_iteration["Post"]:
+              self.post_picture()
+              print("Posted picture!")
+              self.next_iteration["Post"] = time.time() + self.between_post 
           if time.time() > self.next_iteration["Like_NewsFeed"] and self.period_like_newsfeed_count > 0 and self.like_newsfeed():
             self.like_newsfeed_count += 1
             self.period_like_newsfeed_count -=1
