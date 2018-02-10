@@ -16,9 +16,9 @@ class JodelBot:
         self.scanabtastrate = 8
         self.scanradius = 2
         self.db = DBWrapper(os.path.abspath(os.path.join(__file__,"..",'jodel.db')))
-        self.citylist = ["Muenchen","Duesseldorf","Berlin","Hamburg","Rostock",
-                         "Frankfurt am Main","Koeln","Wien",
-                         "Stuttgart","Dortmund","Bremen","Essen","Bern","Heidelberg","Tuebingen"]
+        self.citylist = [u"München",u"Düsseldorf","Berlin","Hamburg","Rostock",
+                         "Frankfurt am Main",u"Köln","Wien",
+                         "Stuttgart","Dortmund","Bremen","Essen","Bern","Heidelberg",u"Tübingen"]
         self.lat, self.lng, self.city = 48.148434, 11.567867, "Munich"
         self.access_token = "81490906-56920392-3f8cb7a3-4604-42c7-9455-c797fe5a0831"
         self.expiration_date= 1518386290
@@ -37,13 +37,13 @@ class JodelBot:
 
     def getBestImage(self,used = False):
         post = self.db.getTop(used)
-        if post[0] == "":
-            logging.warning("Found an empty String load new")
-            return self.getBestImage()
         if post is None:
             logging.warning("Could not find a top Post, rescanning...")
             self.scanTopPost(200)
             return self.getBestImage(used)
+        if post[0] == "":
+            logging.warning("Found an empty String load new")
+            return self.getBestImage()
         return self.getImage(post[0],post[1],post[2],post[3])
     def getImage(self,text,votes,city,color):
         crgb = tuple(int(color[i:i + 2], 16) for i in (0, 2, 4))
@@ -54,9 +54,10 @@ class JodelBot:
         font = ImageFont.truetype(os.path.abspath(os.path.join(__file__, '..' ,"gbr.otf")), 28)
         fontVotes = ImageFont.truetype(os.path.abspath(os.path.join(__file__, '..' ,"gbr.otf")), 28)
         fontCity = ImageFont.truetype(os.path.abspath(os.path.join(__file__, '..' ,"gbr.otf")), 20)
-        #city = city.replace("ue","ü")
-        #city = city.replace("ae", "ä")
-        #city = city.replace("oe", "ö")
+        city.encode('iso-8859-1')
+        city = city.replace("ue",u"ü")
+        city = city.replace("ae", u"ä")
+        city = city.replace("oe", u"ö")
         splitLength = 28
         text = text.replace("\n\n", "\n")
         textArray = text.split(" ")
