@@ -37,6 +37,9 @@ class JodelBot:
 
     def getBestImage(self,used = False):
         post = self.db.getTop(used)
+        if post[0] == "":
+            logging.warning("Found an empty String load new")
+            return self.getBestImage()
         if post is None:
             logging.warning("Could not find a top Post, rescanning...")
             self.scanTopPost(200)
