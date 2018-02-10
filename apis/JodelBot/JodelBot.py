@@ -28,6 +28,8 @@ class JodelBot:
         return count
     def getBestImage(self,used = False):
         post = self.db.getTop(used)
+        if post is None:
+            return
         return self.getImage(post[0],post[1],post[3])
     def getImage(self,text,votes,color):
         crgb = tuple(int(color[i:i + 2], 16) for i in (0, 2, 4))
