@@ -11,7 +11,7 @@ class JodelBot:
         self.db = DBWrapper('jodel.db')
         self.citylist = ["Munich","Dusseldorf","Berlin","Hamburg","Rostock",
                          "Frankfurt am Main","Koln","Wien",
-                         "Stuttgart","Dortmund","Bremen","Essen","Bern"]
+                         "Stuttgart","Dortmund","Bremen","Essen","Bern","Heidelberg","Tubingen"]
         self.lat, self.lng, self.city = 48.148434, 11.567867, "Munich"
         self.access_token = "81490906-56920392-3f8cb7a3-4604-42c7-9455-c797fe5a0831"
         self.expiration_date= 1518386290
@@ -39,6 +39,7 @@ class JodelBot:
         draw = ImageDraw.Draw(back)
         font = ImageFont.truetype("gbr.otf", 28)
         fontVotes = ImageFont.truetype("gbr.otf", 28)
+        fontCity = ImageFont.truetype("gbr.otf", 20)
         splitLength = 28
         text = text.replace("\n\n", "\n")
         textArray = text.split(" ")
@@ -67,7 +68,7 @@ class JodelBot:
             draw.text((40, 277 + offset + 32 * i), newArray[i], (255, 255, 255), font=font)
         offset = len(str(votes)) * -7
         draw.text((575 + offset, 273), str(votes), (255, 255, 255), font=fontVotes)
-        #draw.text((580 + len(city) * -15, 600), city, (255, 255, 255), font=fontVotes)
+        draw.text((65, 600), city, (255, 255, 255), font=fontCity)
         return back
 
     def getTopPost(self, city):
