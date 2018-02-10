@@ -1,6 +1,9 @@
 # -*- coding: iso-8859-1 -*-
 import jodel_api
 import os
+import sys
+import time
+import logging
 from PIL import Image
 from PIL import ImageFont
 from PIL import ImageDraw
@@ -9,6 +12,7 @@ from DBwrapper import DBWrapper
 
 class JodelBot:
     def __init__(self):
+        logging.basicConfig(filename="log.log", level=logging.INFO)
         self.scanabtastrate = 8
         self.scanradius = 2
         self.db = DBWrapper(os.path.abspath(os.path.join(__file__,"..",'jodel.db')))
@@ -21,13 +25,22 @@ class JodelBot:
         self.distinct_id = "5a7781f268566e001735a74e"
         self.device_uid= "d37e23334c45cf8d867ea7bc556b1e0e6d357e10eea0a22926b776c7b0031dcd"
         self.refresh_token = "a19ad214-425b-4dc7-a19e-06aa0f9c12a8"
-        self.j = jodel_api.JodelAccount(lat=self.lat, lng=self.lng, city=self.city,access_token=self.access_token, expiration_date=self.expiration_date,
+        while True:
+            try:
+                self.j = jodel_api.JodelAccount(lat=self.lat, lng=self.lng, city=self.city,access_token=self.access_token, expiration_date=self.expiration_date,
                                refresh_token=self.refresh_token, distinct_id= self.distinct_id, device_uid=self.device_uid, is_legacy=False)
+                logging.info("Successful connected to Jodel")
+                break;
+            except:
+                logging.warning("Could not connect to Jodel retry...")
+                time.sleep(5000)
+
     def getBestImage(self,used = False):
         post = self.db.getTop(used)
         if post is None:
-            
-            return
+            logging.warning("Could not find a top Post, rescanning...")
+            self.scanTopPost(200)
+            return self.getBestImage(used)
         return self.getImage(post[0],post[1],post[2],post[3])
     def getImage(self,text,votes,city,color):
         crgb = tuple(int(color[i:i + 2], 16) for i in (0, 2, 4))
@@ -74,22 +87,31 @@ class JodelBot:
         return (back,city)
 
     def getTopPost(self, city):
-        geolocator = Nominatim()
-        clat = geolocator.geocode(city).latitude - self.scanradius *self.scanabtastrate * 0.00898
-        clong = geolocator.geocode(city).longitude - self.scanradius*self.scanabtastrate * 0.00899
-        self.j.set_location(clat,clong,city)
-        temp = self.j.get_posts_popular(skip=0, limit=1, after=None, mine=False, hashtag=None, channel=None)
-        print("Scanning " + city)
-        for x in range(0,self.scanradius * 2):
-            for y in range(0,self.scanradius * 2):
-                self.j.set_location(clat,clong,city)
-                temp2 = self.j.get_posts_popular(skip=0, limit=1, after=None, mine=False, hashtag=None, channel=None)
-                #print(temp[1]['posts'][0]['message'])
-                if temp2[1]['posts'][0]['vote_count'] > temp[1]['posts'][0]['vote_count']:
-                    temp = temp2
-                clong = clong + self.scanabtastrate * 0.00899
-            clat = clat + self.scanabtastrate * 0.00898
-        return (temp[1]['posts'][0]['message'],temp[1]['posts'][0]['vote_count'],temp[1]['posts'][0]['color'])
+        try:
+            geolocator = Nominatim()
+            clat = geolocator.geocode(city).latitude - self.scanradius *self.scanabtastrate * 0.00898
+            clong = geolocator.geocode(city).longitude - self.scanradius*self.scanabtastrate * 0.00899
+            self.j.set_location(clat,clong,city)
+            temp = self.j.get_posts_popular(skip=0, limit=1, after=None, mine=False, hashtag=None, channel=None)
+            logging.info("Scanning " + city)
+            print("Scanning " + city)
+            for x in range(0,self.scanradius * 2):
+                for y in range(0,self.scanradius * 2):
+                    self.j.set_location(clat,clong,city)
+                    temp2 = self.j.get_posts_popular(skip=0, limit=1, after=None, mine=False, hashtag=None, channel=None)
+                    #print(temp[1]['posts'][0]['message'])
+                    if temp2[1]['posts'][0]['vote_count'] > temp[1]['posts'][0]['vote_count']:
+                        temp = temp2
+                    clong = clong + self.scanabtastrate * 0.00899
+                clat = clat + self.scanabtastrate * 0.00898
+            return (temp[1]['posts'][0]['message'],temp[1]['posts'][0]['vote_count'],temp[1]['posts'][0]['color'])
+        except Exception:
+            time.sleep(10000)
+            logging.exception(Exception)
+            print(Exception)
+            logging.info("Restarting the scan...")
+            print("Restarting the scan...")
+            return self.getTopPost(city)
     def scanTopPost(self,minVotes):
         for c in self.citylist:
            temp = self.getTopPost(c)
