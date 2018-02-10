@@ -12,7 +12,7 @@ from DBwrapper import DBWrapper
 
 class JodelBot:
     def __init__(self):
-        logging.basicConfig(filename="log.log", level=logging.INFO)
+        logging.basicConfig(filename=os.path.abspath(os.path.join(__file__,"..",'log.log')), level=logging.INFO)
         self.scanabtastrate = 8
         self.scanradius = 2
         self.db = DBWrapper(os.path.abspath(os.path.join(__file__,"..",'jodel.db')))
