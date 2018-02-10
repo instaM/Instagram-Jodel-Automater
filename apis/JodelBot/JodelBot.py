@@ -30,8 +30,8 @@ class JodelBot:
         post = self.db.getTop(used)
         if post is None:
             return
-        return self.getImage(post[0],post[1],post[3])
-    def getImage(self,text,votes,color):
+        return self.getImage(post[0],post[1],post[2],post[3])
+    def getImage(self,text,votes,city,color):
         crgb = tuple(int(color[i:i + 2], 16) for i in (0, 2, 4))
         back = Image.new("RGB", (640,640), crgb)
         front = Image.open("elements.png")
@@ -67,6 +67,7 @@ class JodelBot:
             draw.text((40, 277 + offset + 32 * i), newArray[i], (255, 255, 255), font=font)
         offset = len(str(votes)) * -7
         draw.text((575 + offset, 273), str(votes), (255, 255, 255), font=fontVotes)
+        #draw.text((580 + len(city) * -15, 600), city, (255, 255, 255), font=fontVotes)
         return back
 
     def getTopPost(self, city):
