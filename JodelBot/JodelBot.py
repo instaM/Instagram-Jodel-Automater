@@ -51,10 +51,10 @@ class JodelBot:
                         tempS = ""
             else: #falls laenger als die Maximalezeilen laenge
                 if x[0] != '\n':
-                    newString = newString + tempS + '\n' + x #falls in x noch kein new line
+                    newString = newString + tempS + '\n' #falls in x noch kein new line
                 else:
-                    newString = newString + tempS + x #falls x ein newline beginnt kein new line noetig
-                tempS = ""
+                    newString = newString + tempS#falls x ein newline beginnt kein new line noetig
+                tempS = x
         newString = newString + tempS #fuege den uebrig gebliebenen String hinzu
         newArray = newString.split('\n')
         offset = len(newArray) * -16
