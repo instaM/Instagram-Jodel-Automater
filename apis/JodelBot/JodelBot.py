@@ -36,13 +36,14 @@ class JodelBot:
             except:
                 logging.warning("Could not connect to Jodel retry...")
                 print("Could not connect to Jodel retry...")
-                time.sleep(5000)
+                time.sleep(5)
 
     def getBestImage(self,used = False):
         post = self.db.getTop(used)
         if post is None:
             logging.warning("Could not find a top Post, rescanning...")
-            print("Could not find a top Post, rescanning...")
+            print("Could not find a top Post, waiting 1 Minute and rescanning...")
+            time.sleep(60)
             self.scanTopPost(200)
             return self.getBestImage(used)
         if post[0] == "":
@@ -127,7 +128,7 @@ class JodelBot:
                 clat = clat + self.scanabtastrate * 0.00898
             return (temp['message'],temp['vote_count'],temp['color'])
         except Exception:
-            time.sleep(10000)
+            time.sleep(10)
             logging.exception(Exception)
             print(Exception)
             logging.info("Restarting the scan...")
