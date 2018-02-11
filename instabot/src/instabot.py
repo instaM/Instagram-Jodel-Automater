@@ -182,8 +182,8 @@ class Instabot:
       if(len(to_follow_list) == 0):
         return False
       follower = random.choice(to_follow_list)
-      self.api.follow(follower[0])
-      self.database.insert_follower(follower[0],follower[1],0,time.time() + self.time_to_unfollow,follower[2])
+      #self.api.follow(follower[0])
+      #self.database.insert_follower(follower[0],follower[1],0,time.time() + self.time_to_unfollow,follower[2])
       self.database.delete_to_follow(follower[0])
       print("#%i Follow User %s" %(self.follow_count,follower[1])) 
       time.sleep(random.randint(7, 20))
@@ -264,7 +264,7 @@ class Instabot:
             self.reset_period_counter()
             self.end_time = time.time()+self.period
             period_count += 1
-          if len(tag_feed) > 0:
+          if len(tag_feed) == 0:
             if len(tag_list) == 0:
               tag_list = self.tag_list[:]
               
