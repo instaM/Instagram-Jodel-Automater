@@ -23,7 +23,7 @@ class Instabot:
         self.post_caption               = u"Dein täglicher Jodel!\nFolge @topdailyjodel für lustige Jodel aus ganz Deutschland \n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n#%s#fun #jodel #germany #instajodel #jodelgermany #funnyquote #quote #quoteoftheday #instafun #jodelapp #funny #study #uni #university #student #lifestyle #studentenlifestyle #lustig #sprüche"
         self.max_followers_per_hour     = 0
         self.max_unfollows_per_hour     = 0
-        self.max_likes_per_hour         = 1
+        self.max_likes_per_hour         = 20
         self.max_like_newsfeed_per_hour = 0
         self.max_posts_per_day          = 15
         self.period                     = 60*60
