@@ -20,7 +20,7 @@ class Instabot:
     def __init__(self):
         self.username                   = "topdailyjodel"
         self.passwort                   =  "resurrect123"
-        self.post_caption               = u"Dein täglicher Jodel!\nFolge @topdailyjodel für lustige Jodel aus ganz Deutschland \n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n#%s#fun #jodel #germany #instajodel #jodelgermany #funnyquote #quote #quoteoftheday #instafun #jodelapp #funny #study #uni #university #student #lifestyle #studentenlifestyle #lustig #sprüche #love #TagsForLikes #TagsForLikesApp #TFLers #tweegram #photooftheday #20likes #amazing #smile #follow4follow #like4like #look #instalike #igers #picoftheday #food #instadaily #instafollow #followme #girl #iphoneonly #instagood #bestoftheday #instacool #instago #all_shots #follow #webstagram #colorful #style #swag"
+        self.post_caption               = u"Dein täglicher Jodel!\nFolge @topdailyjodel für lustige Jodel aus ganz Deutschland \n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n#%s#fun #jodel #germany #jodelgermany #funnyquote #instafun #funny #study #uni  #student #lifestyle  #lustig #sprüche #love #TagsForLikes #TagsForLikesApp #TFLers #tweegram #photooftheday #20likes #amazing #follow4follow #like4like #instalike #igers #instafollow #followme"
         self.max_followers_per_hour     = 20
         self.max_unfollows_per_hour     = 0
         self.max_likes_per_hour         = 20
