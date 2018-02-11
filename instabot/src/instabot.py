@@ -25,7 +25,7 @@ class Instabot:
         self.max_unfollows_per_hour     = 0
         self.max_likes_per_hour         = 1
         self.max_like_newsfeed_per_hour = 0
-        self.max_posts_per_day          = 8
+        self.max_posts_per_day          = 15
         self.period                     = 60*60
         self.max_followers_per_period             = self.max_followers_per_hour * (self.period/(60*60))
         self.max_unfollows_per_period             = self.max_unfollows_per_hour * (self.period/(60*60))
