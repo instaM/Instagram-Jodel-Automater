@@ -101,22 +101,31 @@ class JodelBot:
             clat = geolocator.geocode(city).latitude - self.scanradius *self.scanabtastrate * 0.00898
             clong = geolocator.geocode(city).longitude - self.scanradius*self.scanabtastrate * 0.00899
             self.j.set_location(clat,clong,city)
-            temp = self.j.get_posts_popular(skip=0, limit=1, after=None, mine=False, hashtag=None, channel=None)
-            if len(temp[1]['posts'][0]['message'].split(" ")) < self.minlength:
-                temp[1]['posts'][0]['vote_count'] = 0
+            t = self.j.get_posts_popular(skip=0, limit=10, after=None, mine=False, hashtag=None, channel=None)[1]['posts']
+            temp = t[0]
+            temp['vote_count'] = 0
+            for x in t:
+                if 'image_headers' not in x:
+                    temp = x
+                    break;
             logging.info("Scanning " + city)
             print("Scanning " + city)
             for x in range(0,self.scanradius * 2):
                 for y in range(0,self.scanradius * 2):
                     self.j.set_location(clat,clong,city)
-                    temp2 = self.j.get_posts_popular(skip=0, limit=1, after=None, mine=False, hashtag=None, channel=None)
+                    t2 = self.j.get_posts_popular(skip=0, limit=10, after=None, mine=False, hashtag=None, channel=None)[1]['posts']
+                    temp2 = t2[0]
+                    temp2['vote_count'] = 0 #init temp2
+                    for x in t2:
+                        if 'image_headers' not in x:
+                            temp2 = x
+                            break;
                     #print(temp[1]['posts'][0]['message'])
-                    if temp2[1]['posts'][0]['vote_count'] > temp[1]['posts'][0]['vote_count'] and \
-                            len(temp2[1]['posts'][0]['message'].split(" ")) >= self.minlength :
+                    if temp2['vote_count'] > temp['vote_count']:
                         temp = temp2
                     clong = clong + self.scanabtastrate * 0.00899
                 clat = clat + self.scanabtastrate * 0.00898
-            return (temp[1]['posts'][0]['message'],temp[1]['posts'][0]['vote_count'],temp[1]['posts'][0]['color'])
+            return (temp['message'],temp['vote_count'],temp['color'])
         except Exception:
             time.sleep(10000)
             logging.exception(Exception)
