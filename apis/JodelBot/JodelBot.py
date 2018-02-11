@@ -13,6 +13,7 @@ from DBwrapper import DBWrapper
 class JodelBot:
     def __init__(self):
         logging.basicConfig(filename=os.path.abspath(os.path.join(__file__,"..",'log.log')), level=logging.INFO)
+        self.minlength = 10
         self.scanabtastrate = 8
         self.scanradius = 2
         self.db = DBWrapper(os.path.abspath(os.path.join(__file__,"..",'jodel.db')))
@@ -101,6 +102,8 @@ class JodelBot:
             clong = geolocator.geocode(city).longitude - self.scanradius*self.scanabtastrate * 0.00899
             self.j.set_location(clat,clong,city)
             temp = self.j.get_posts_popular(skip=0, limit=1, after=None, mine=False, hashtag=None, channel=None)
+            if len(temp[1]['posts'][0]['message'].split(" ")) < self.minlength:
+                temp[1]['posts'][0]['vote_count'] = 0
             logging.info("Scanning " + city)
             print("Scanning " + city)
             for x in range(0,self.scanradius * 2):
@@ -108,7 +111,8 @@ class JodelBot:
                     self.j.set_location(clat,clong,city)
                     temp2 = self.j.get_posts_popular(skip=0, limit=1, after=None, mine=False, hashtag=None, channel=None)
                     #print(temp[1]['posts'][0]['message'])
-                    if temp2[1]['posts'][0]['vote_count'] > temp[1]['posts'][0]['vote_count']:
+                    if temp2[1]['posts'][0]['vote_count'] > temp[1]['posts'][0]['vote_count'] and \
+                            len(temp2[1]['posts'][0]['message'].split(" ")) >= self.minlength :
                         temp = temp2
                     clong = clong + self.scanabtastrate * 0.00899
                 clat = clat + self.scanabtastrate * 0.00898
