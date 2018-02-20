@@ -27,13 +27,24 @@ class JodelBot:
         self.device_uid= "d37e23334c45cf8d867ea7bc556b1e0e6d357e10eea0a22926b776c7b0031dcd"
         self.refresh_token = "a19ad214-425b-4dc7-a19e-06aa0f9c12a8"
         while True:
+
             try:
-                self.j = jodel_api.JodelAccount(lat=self.lat, lng=self.lng, city=self.city,access_token=self.access_token, expiration_date=self.expiration_date,
-                               refresh_token=self.refresh_token, distinct_id= self.distinct_id, device_uid=self.device_uid, is_legacy=False)
+                self.j = jodel_api.JodelAccount(lat=self.lat, lng=self.lng, city=self.city)
+               # self.j = jodel_api.JodelAccount(lat=self.lat, lng=self.lng, city=self.city,access_token=self.access_token, expiration_date=self.expiration_date,
+                #               refresh_token=self.refresh_token, distinct_id= self.distinct_id, device_uid=self.device_uid, is_legacy=False)
+
+
                 logging.info("Successful connected to Jodel")
                 print("Successful connected to Jodel")
                 break;
-            except:
+            except Exception as ex:
+
+                #nt = self.j.refresh_all_tokens()
+                #self.refresh_token = nt['refresh_token']
+                #self.access_token = nt['access_token']
+                #self.expiration_date = nt['expiration_date']
+                print(ex)
+                logging.warning(ex)
                 logging.warning("Could not connect to Jodel retry...")
                 print("Could not connect to Jodel retry...")
                 time.sleep(5)
@@ -126,11 +137,12 @@ class JodelBot:
                         temp = temp2
                     clong = clong + self.scanabtastrate * 0.00899
                 clat = clat + self.scanabtastrate * 0.00898
+                logging.info(temp)
             return (temp['message'],temp['vote_count'],temp['color'])
-        except Exception:
+        except Exception as ex:
             time.sleep(10)
-            logging.exception(Exception)
-            print(Exception)
+            logging.exception(ex)
+            print(ex)
             logging.info("Restarting the scan...")
             print("Restarting the scan...")
             return self.getTopPost(city)
