@@ -1,44 +1,77 @@
 import requests 
-import re
+import json
 import time
-class InstaHashtag:
-  def __init__(self):
-    self.link = "https://www.instagram.com/explore/tags/"
-  def getHashtagContent(self,hashtag):
-    link = self.link+hashtag+"/?__a=1"
-    feed = []
-    for x in range(0, 5):
-   
-      r = requests.get(link)
+class Collector:
+    url_user_detail = 'https://www.instagram.com/%s/?__a=1'
+    url_tag = 'https://www.instagram.com/explore/tags/%s/?__a=1'
+    url_media_detail = 'https://www.instagram.com/p/%s/?__a=1'
+    def getUserInfo(self,user_id,username):
+        info = {}
+       
+        try:    
+            url_det = self.url_user_detail % (username)   
+            r = requests.get(url_det)
+            all_data = json.loads(r.text)
+            
+           
+            return all_data
+        except:
+            
+            print("Except on getUserInfo!")
+            
+            return None
+           
+    def getMediaInfo(self,media_short):
+        info = {}
 
-      cont = r.json()
-      print(r.content)
-      if(cont["graphql"]["hashtag"]["edge_hashtag_to_media"]["page_info"]["has_next_page"] == False):
-        x=5
-        cont = cont["graphql"]["hashtag"]["edge_hashtag_to_media"]["edges"]
-        
-      else:
-        next_id = cont["graphql"]["hashtag"]["edge_hashtag_to_media"]["page_info"]["end_cursor"]
-        cont = cont["graphql"]["hashtag"]["edge_hashtag_to_media"]["edges"]
-        print(cont)
-        link = self.link+hashtag+"/?__a=1&max_id="+next_id
-        time.sleep(3)
-        print(cont)
-      for post in cont:
-              feed.append(cont)
+        try:
+           
+                
+            url_det = self.url_media_detail % (media_short)
+                
+            r = requests.get(url_det)
+            all_data = json.loads(r.text)
+            
+           
+            return all_data
+        except:
+            
+            print("Except on get_media!")
+            
+            return None
       
-    return feed
-  def test(self):
-        
-        header =({
-            'Accept-Encoding': 'gzip, deflate',
-            'Accept-Language': self.accept_language,
-            'Connection': 'keep-alive',
-            'Content-Length': '0',
-            'Host': 'www.instagram.com',
-            'Origin': 'https://www.instagram.com',
-            'Referer': 'https://www.instagram.com/',
-            'User-Agent': self.user_agent,
-            'X-Instagram-AJAX': '1',
-            'X-Requested-With': 'XMLHttpRequest'
-        })
+    def getHashtagFeed(self, tag,max):
+        """ Get media ID set, by your hashtag """
+        feed = []
+        next_id = None
+   
+        for x in range(0,max):    
+       
+            if(next_id == None):
+                url_tag = self.url_tag % (tag)
+            else:
+                url_tag = self.url_tag % (tag)+"&max_id="+next_id   
+            try:
+                
+                r = requests.get(url_tag)
+               
+               
+                all_data = json.loads(r.text)
+                
+                if(all_data["graphql"]["hashtag"]["edge_hashtag_to_media"]["page_info"]["has_next_page"] == False):
+                    for post in all_data["graphql"]["hashtag"]["edge_hashtag_to_media"]["edges"]:
+                        feed.append(post)
+                    return feed
+                else:
+                    next_id = all_data["graphql"]["hashtag"]["edge_hashtag_to_media"]["page_info"]["end_cursor"] 
+                    
+                for post in all_data["graphql"]["hashtag"]["edge_hashtag_to_media"]["edges"]:
+                    feed.append(post)
+                
+            except Exception as e:
+                print(e)
+                return []
+                        
+              
+        return feed
+  

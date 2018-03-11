@@ -17,6 +17,11 @@ class InstaDB:
   def connect(self):
     self.con = sqlite3.connect(self.db)
     self.cur = self.con.cursor()
+    self.cur.execute("CREATE TABLE if not exists blacklist_refollow(uni_id char[50] primary key,name char[50],expire_date DATETIME)")
+    self.cur.execute("CREATE TABLE if not exists following(uni_id char[50] primary key,name char[50],whitelist boolean, expire_date date);")
+    self.cur.execute("CREATE TABLE if not exists to_follow(uni_id char[50] primary key,name char[50],hashtag char[50],liked boolean, followed boolean);")
+    self.cur.execute("CREATE TABLE if not exists all_follow(uni_id char[50] primary key,name char[50],hashtag char[50]);")
+    self.con.commit()
   def disconnect(self):
     if(self.con != None):
       self.con.close()
@@ -29,11 +34,11 @@ class InstaDB:
     self.cur.execute("REPLACE INTO %s VALUES('%s','%s',%i,'%s')" % (self.following,uni_id,name,whitelist,str(date)))
     self.cur.execute("REPLACE INTO %s VALUES('%s','%s','%s')" % (self.all_follow,uni_id,name,hashtag))
     self.con.commit()
-  def insert_to_follow(self,uni_id,name,hashtag,media_uni_id):
-     self.cur.execute("REPLACE INTO %s VALUES('%s','%s','%s','%s')" % (self.to_follow,uni_id,name,hashtag,media_uni_id))
-     self.con.commit()
-  def insert_to_like(self,uni_id):
-    self.cur.execute("REPLACE INTO %s VALUES('%s')" % (self.to_like,uni_id))
+  def insert_to_follow(self,uni_id,name,hashtag):
+    self.cur.execute("REPLACE INTO %s VALUES('%s','%s','%s',0,0)" % (self.to_follow,uni_id,name,hashtag))
+    self.con.commit()
+  def update_to_follow(self,uni_id, followed=0, liked=0):
+    self.cur.execute("UPDATE %s SET followed=%i, liked=%i where uni_id=%s" % (self.to_follow,followed,liked,uni_id))
     self.con.commit()
   def check_blacklist_refollow(self,uni_id):
    
@@ -61,16 +66,12 @@ class InstaDB:
     row = self.cur.fetchall()
     
     return row
-  def get_to_follows(self):
-    self.cur.execute("SELECT * from %s limit 20" % (self.to_follow))
+  def get_to_follows(self,followed = 0, liked=0):
+    self.cur.execute("SELECT * from %s where followed=%i and liked=%i limit 20" % (self.to_follow,followed,liked))
     row = self.cur.fetchall()
     
     return row
-  def get_to_like(self):
-    self.cur.execute("SELECT * from %s limit 20" % (self.to_like))
-    row = self.cur.fetchall()
-  
-    return row
+ 
   def get_unfollows(self):
    
     self.cur.execute("SELECT * from %s where whitelist= 0 and expire_date < '%s' order by expire_date limit 20" % (self.following,str(time.time())))
@@ -88,8 +89,6 @@ class InstaDB:
   def delete_to_follow(self,uni_id):
     self.delete(uni_id,self.to_follow)
     
-  def delete_to_like(self,uni_id):
-    self.delete(uni_id,self.to_like)
     
   def delete(self, uni_id,table):
     

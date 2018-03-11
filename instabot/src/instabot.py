@@ -4,11 +4,11 @@ import os
 import sys
 lib_path = os.path.abspath(os.path.join(__file__, '..', '..','..', 'apis', 'JodelBot'))
 sys.path.append(lib_path)
-lib_path = os.path.abspath(os.path.join(__file__, '..', '..','..', 'apis', 'instagramapi_browser'))
+lib_path = os.path.abspath(os.path.join(__file__, '..', '..','..', 'apis', 'instagramapi_headless'))
 
 sys.path.append(lib_path)
 from database import InstaDB
-from instagramapi_browser import InstagramAPI
+from instagramapi_headless import InstagramAPI
 from JodelBot import JodelBot
 from PIL import Image
 from instapy_cli.cli import InstapyCli
@@ -16,16 +16,52 @@ import random
 import time
 import signal
 import atexit
+from datacollector import Collector
 class Instabot:
-    def __init__(self):
-        self.username                   = "topdailyjodel"
-        self.passwort                   =  "resurrect123"
-        self.post_caption               = u"Dein täglicher Jodel!\nFolge @topdailyjodel für lustige Jodel aus ganz Deutschland \n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n#%s#fun #jodel #germany #jodelgermany #funnyquote #instafun #funny #study #uni  #student #lifestyle  #lustig #sprüche #love #TagsForLikes #TagsForLikesApp #TFLers #tweegram #photooftheday #20likes #amazing #follow4follow #like4like #instalike #igers #instafollow #followme"
-        self.max_followers_per_hour     = 20
-        self.max_unfollows_per_hour     = 0
-        self.max_likes_per_hour         = 20
-        self.max_like_newsfeed_per_hour = 0
-        self.max_posts_per_day          = 15
+    def __init__(self,
+                 username               = "",
+                 passwort               = "",
+                 post_caption           = "",
+                 max_followers_per_hour = 0,
+                 max_unfollows_per_hour = 0,
+                 max_likes_per_hour     = 0,
+                 max_posts_per_day      = 0,
+                 max_likes_per_tag      = 1000000,
+                 max_likes_per_picture  = 1000000,
+                 max_like_newsfeed_per_hour = 0,
+                 max_followers_on_follower = 1000000,
+                 min_followers_on_follower = 0,
+                 blacklist_usertags        = [],
+                 tag_list                   = ['hashtag'],
+                 time_to_unfollow           = 100 * 60*60*24,
+                 days_to_refollow           = 300
+                 ):
+        
+        
+        self.username                   = username
+        self.passwort                   =  passwort
+        self.post_caption               = post_caption
+        self.max_followers_per_hour     = max_followers_per_hour
+        self.max_unfollows_per_hour     = max_unfollows_per_hour
+        self.max_likes_per_hour         = max_likes_per_hour
+        self.max_like_newsfeed_per_hour = max_like_newsfeed_per_hour
+        self.max_posts_per_day          = max_posts_per_day
+       
+        self.time_to_unfollow           = time_to_unfollow
+        self.days_to_refollow           = days_to_refollow
+        self.like_newsfeed_count        = 0
+        self.like_count                 = 0
+        self.follow_count               = 0
+        self.unfollow_count             = 0
+        self.post_count                 = 0
+        self.max_likes_per_tag          = max_likes_per_tag
+        self.max_likes_per_picture      = max_likes_per_picture
+        self.max_followers_on_follower  = max_followers_on_follower
+        self.min_followers_on_follower  = min_followers_on_follower
+        self.blacklist_usertags         = blacklist_usertags
+        self.tag_list                   = tag_list
+        
+        
         self.period                     = 60*60
         self.max_followers_per_period             = self.max_followers_per_hour * (self.period/(60*60))
         self.max_unfollows_per_period             = self.max_unfollows_per_hour * (self.period/(60*60))
@@ -37,43 +73,30 @@ class Instabot:
         self.between_unfollow           = self.safe_div(self.period,self.max_unfollows_per_period)
         self.between_post               = self.safe_div(60*60*24,self.max_posts_per_day)
         
-        self.time_to_unfollow           = 3*60*60*24
-        self.days_to_refollow           = 30
-        self.like_newsfeed_count        = 0
-        self.like_count                 = 0
-        self.follow_count               = 0
-        self.unfollow_count             = 0
-        self.max_likes_per_tag          = 100
-        self.max_likes_per_picture      = 600
-        self.max_followers_on_follower  = 1500
-        self.min_followers_on_follower  = 100
-        self.blacklist_usertags         = ["alex","lukas","michael","daniel","philipp","jonas","fabian","marcel","tim","kevin","jan","david","tom","markus","sebastian","julian","leon","christoph","simon",
-                                            "felix","andreas","nils","nico","***REMOVED***","max","florian","dennis","patrick","thomas","christopher","moritz","nick","chris","paul","jonathan","tobias","jakob","christian",                                            
-                                            "adrian","matthias","dominik","stefan","rene","ali","marco","vincent","mohamed","kai","erik","ludwig","hendrik","mario","oliver","lucas","anton","timo","sven","marc","andre",
-                                            "gabriel","leo","arthur","maximilian","ben","jannik","niklas","mark","noah","peter","mark","johannes","konrad","alexander","pierre","jason","frank","marvin","till","artur","luca",
-                                            "fabio","lasse","jens","konstantin","tamino","william","luis","alihan","ricardo","victor","jeremy","brian","dustin","janis,niels","jesse","phil","yoda","muhammed","bako","gerrit",
-                                            "stefan","***REMOVED***","photo","fitness","traveller","wedding","food","guy","click","city","design","artwork","world","traveller","backpack","atelier","beard","blog","beautiful","beauty",
-                                            "buzz","feed","call","cafe","daily","earth","fashion","motivation","full","film","interi","tech","henry","inspi","irela","music","official","love","life","magic","fanpage","raymond","adam",
-                                            "abdul","zsolt","toni","photographe","boy","travel"]
-        self.tag_list = ['viennagirl','munichgirl',"viennagirls","viennacitygirl","viennacitygirls","viennaparty","viennamodel","viennanights",
-                          "viennabynight","austriangirl","yogavienna","viennafashion","viennagram","viennastyle","viennanightlife","viennanights",
-                         "munichgirls","munichstyle","munichnightlife","munichnights","munichnightlife","munichmodels","munichblogger","munichnights","089","vienna","munich","viennagirl","munichgirl","austriangirl"]
-       # self.tag_list = ["Nikon", "Vienna", "portraitpage", "canon", "Austria", "saltyhair", "Portrait", "photography", "Brandymelville"]
         self.likes_per_tag_left         = self.init_tags()
         self.period_like_count          = self.max_likes_per_period
         self.period_follow_count        = self.max_followers_per_period
         self.period_unfollow_count      = self.max_unfollows_per_period
         self.period_like_newsfeed_count        = self.max_like_newsfeed_per_period
-        self.database                   = InstaDB()
-        self.api                        = None
-        self.get_post_api               = JodelBot()
-        self.post_instagram_api         = None
-        self.next_iteration             = {"Like": 0, "Follow": 0, "Unfollow": time.time()+(self.between_unfollow/2), "Like_NewsFeed": 0,"Post":0}
+        self.period_post_count          = self.max_posts_per_day
+      
+        self.next_iteration             = {"Like": time.time()+(self.between_like/2)-12, "Follow":  0, "Unfollow": time.time()+(self.between_unfollow/2), "Like_NewsFeed": 0,"Post":0}
         self.start_time                 = 0.0
         self.end_time                   = 0.0
-        self.timeline                   = {}
+        self.day_count                  = 0.0
+      
+        self.database                   = InstaDB()
+        self.collector                  = Collector()
+        self.get_post_api               = None
+        self.api                        = None
+        self.post_instagram_api         = None
+        
+        
         signal.signal(signal.SIGTERM, self.cleanup)
         atexit.register(self.cleanup)
+        
+        
+        
     def safe_div(self,x,y):
         if y == 0:
             return 0
@@ -84,28 +107,14 @@ class Instabot:
             tag_list_left[tag] = self.max_likes_per_tag
         return tag_list_left
         
-    def get_tag_feed(self,tag, next_max):
-      feed = []
-      next_max_id = ''
-      for n in range(next_max):
-          self.api.getHashtagFeed(tag,next_max_id) 
-          temp = self.api.LastJson
-          for post in temp["items"]:
-              feed.append(post)
-          #time.sleep(2) 
-          try:
-              next_max_id = temp["next_max_id"]     
-          except Exception:
-              
-              print("error next_max. Tag: ", tag)
-              return feed    
-      return feed
     def containsBadKeyWord(self,name):
       for bad in self.blacklist_usertags:
         
         if bad in str(name):
           return bad
       return None
+  
+  
     def worthy(self,info):
       info = info["node"]
       if self.database.check_to_follow(info["owner"]["id"]) == True:
@@ -121,21 +130,18 @@ class Instabot:
        # print("You have followed  %s in the last 30 days"%(info["user"]["username"]))
         return False
      
-      resp = self.api.getMediaInfo(info["shortcode"])
+      resp = self.collector.getMediaInfo(info["shortcode"])
       if(resp == None):
-        return False
-      if(resp["graphql"]["shortcode_media"]["owner"]["followed_by_viewer"]):
         return False
       bad = self.containsBadKeyWord(resp["graphql"]["shortcode_media"]["owner"]["username"])
       if  bad != None:
        # print("%s contains %s !" %  (info["user"]["username"],bad))
         return False 
       
-      resp = self.api.getUserInfo("",username=resp["graphql"]["shortcode_media"]["owner"]["username"])
+      resp = self.collector.getUserInfo("",username=resp["graphql"]["shortcode_media"]["owner"]["username"])
       if(resp == None):
         return False
-      
-      
+       
       if resp["user"]["followed_by"]["count"] > self.max_followers_on_follower:
         #print("%s has too many follower" % (info["user"]["username"]))
         return False
@@ -157,49 +163,27 @@ class Instabot:
         self.post_instagram_api.upload(path,(self.post_caption  %(img[1])))
 
     def like_newsfeed(self):
-      if(len(self.timeline) == 0):
-        self.timeline = self.api.getTimeline()
-        
-
-      if(len(self.timeline) == 0):
-        return False
-      if("id" in self.timeline[0]["node"]):
-        if(self.timeline[0]["node"]["viewer_has_liked"] or ("ad_metadata" in self.timeline[0]["node"])):
-          del self.timeline[0]
-          return False
-        self.api.like(self.timeline[0]["node"]["id"])
      
-        print("#%i Liked TimeLine-Media with id %s name : %s" %(self.like_newsfeed_count,self.timeline[0]["node"]["id"],self.timeline[0]["node"]["owner"]["username"]))
-        del self.timeline[0]
-        return True
-      else:
-        del self.timeline[0]
-        return False
-    
-    def like_and_follow(self):
-      
-      to_follow_list = self.database.get_to_follows()
-      if(len(to_follow_list) == 0):
-        return False
-      follower = random.choice(to_follow_list)
-      #self.api.follow(follower[0])
-      #self.database.insert_follower(follower[0],follower[1],0,time.time() + self.time_to_unfollow,follower[2])
-      self.database.delete_to_follow(follower[0])
-      print("#%i Follow User %s" %(self.follow_count,follower[1])) 
-      time.sleep(random.randint(7, 20))
-      self.api.likeRandomUserMedia(follower[0],username=follower[1])
-      #print("#%i Liked Media with id %s" %(self.like_count,follower[3])) 
-      return True
-      
+      return self.api.likeNewsFeedMedia
+  
     def follow(self):
      
-      to_follow_list = self.database.get_to_follows()
+      to_follow_list = self.database.get_to_follows(liked=1)
       if(len(to_follow_list) == 0):
-        return False
+        to_follow_list = self.database.get_to_follows()
+      if(len(to_follow_list) == 0):
+          return False
+      
       follower = random.choice(to_follow_list)
-      self.api.follow(follower[0])
+      if(self.api.follow(follower[1]) == False):
+          self.database.delete_to_follow(follower[0])
+          return False
       self.database.insert_follower(follower[0],follower[1],0,time.time() + self.time_to_unfollow,follower[2])
-      self.database.delete_to_follow(follower[0])
+      if(follower[3] == 1):
+        self.database.delete_to_follow(follower[0])
+      else:
+        self.database.update_to_follow(follower[0],followed=1)
+        
       print("#%i Follow User %s" %(self.follow_count,follower[1])) 
       
       return True
@@ -210,7 +194,7 @@ class Instabot:
       if(len(unfollower_list) == 0):
         return False
       unfollower = random.choice(unfollower_list)
-      self.api.unfollow(unfollower[0])
+      self.api.unfollow(unfollower[1])
       self.database.delete_follower(unfollower[0])
       self.database.insert_blacklist(unfollower[0],unfollower[1])
       print("#%i unfollow User %s"%(self.unfollow_count,unfollower[1])) 
@@ -218,15 +202,23 @@ class Instabot:
       return True
       
     def like(self):
-      to_like_list = self.database.get_to_like()
-      if(len(to_like_list) == 0):
-        return False
-      like = random.choice(to_like_list)
-      self.api.like(like[0])
-      self.database.delete_to_like(like[0])
-      print("#%i Liked Media with id %s" %(self.like_count,like[0])) 
-      
-      return True
+        to_follow_list = self.database.get_to_follows(followed=1)
+        if(len(to_follow_list) == 0):
+            to_follow_list = self.database.get_to_follows()
+        if(len(to_follow_list) == 0):
+            return False
+        
+        follower = random.choice(to_follow_list)
+        if(self.api.likeRandomUserMedia(follower[1]) == False):
+            self.database.delete_to_follow(follower[0])
+            return False
+        self.database.insert_follower(follower[0],follower[1],0,time.time() + self.time_to_unfollow,follower[2])
+        if(follower[4] == 1):
+            self.database.delete_to_follow(follower[0])
+        else:
+            self.database.update_to_follow(follower[0],liked=1)
+        print("#%i Liked Random User Media %s" %(self.like_count,follower[1]))     
+        return True
     def get_random_tag(self,tag_list):
       return random.choice(tag_list)
   
@@ -235,7 +227,7 @@ class Instabot:
       self.api.login()
       self.database.connect()
       
-      time.sleep(random.randint(15, 30))
+     # time.sleep(random.randint(15, 30))
 
       self.post_instagram_api= InstapyCli(self.username,self.passwort)
     def reset_period_counter(self):
@@ -250,6 +242,7 @@ class Instabot:
         self.login()
         self.start_time = time.time()
         self.end_time   = self.start_time + self.period
+        self.day_count  = self.start_time + 60*60*24
         period_count    = 0
         tag_feed = {}
         tag_list = self.tag_list[:]
@@ -257,9 +250,12 @@ class Instabot:
         print("Follow every %i seconds"% (self.between_follow))
         print("Unfollow every %i seconds"% (self.between_unfollow))
         print("Like every %i seconds"% (self.between_like))
-        print("Like every %i seconds"% (self.between_like_newsfeed))
+        print("Like NewsFeed every %i seconds"% (self.between_like_newsfeed))
         print("Post every %i seconds"% (self.between_post))
         while True:
+          if(time.time() > self.day_count):
+              self.period_post_count = self.max_posts_per_day
+              self.day_count = time.time() + 60*60*24
           if(time.time() > self.end_time):
             self.reset_period_counter()
             self.end_time = time.time()+self.period
@@ -272,33 +268,38 @@ class Instabot:
             del tag_list[tag_list.index(tag)]
             print("Now search on #%s"%(tag))
             print("Available Likes #%i"%(self.likes_per_tag_left[tag]))
-            tag_feed = self.api.getHashtagFeed(tag,3)
+            tag_feed = self.collector.getHashtagFeed(tag,3)
           
           if (len(tag_feed) > 0  and self.database.get_to_follow_count() < 30 ):
             username = self.worthy(tag_feed[0])
             if (username != False):
-              self.database.insert_to_follow(tag_feed[0]["node"]["owner"]["id"],username,tag,tag_feed[0]["node"]["id"])
+              self.database.insert_to_follow(tag_feed[0]["node"]["owner"]["id"],username,tag)
             del tag_feed[0]
           
-          if time.time() > self.next_iteration["Post"]:
+          if time.time() > self.next_iteration["Post"] and self.period_post_count > 0:
               self.post_picture()
               print("Posted picture!")
               self.next_iteration["Post"] = time.time() + self.between_post 
+              
           if time.time() > self.next_iteration["Like_NewsFeed"] and self.period_like_newsfeed_count > 0 and self.like_newsfeed():
+            print("#%i Liked NewsFeed" %(self.like_newsfeed_count))
             self.like_newsfeed_count += 1
             self.period_like_newsfeed_count -=1
             self.next_iteration["Like_NewsFeed"] = time.time() + self.between_like_newsfeed 
             #time.sleep(random.randint(3, 20))
 
-          if time.time() > self.next_iteration["Follow"] and self.period_follow_count > 0 and self.like_and_follow():
+          if time.time() > self.next_iteration["Follow"] and self.period_follow_count > 0 and self.follow():
             self.follow_count += 1
             self.period_follow_count -= 1
-            self.like_count += 1
-            self.period_like_count -= 1
             self.next_iteration["Follow"] = time.time() + self.between_follow
-            self.next_iteration["Like"] = time.time() + self.between_like
             print("Period Count : #%s"%(period_count))
             #time.sleep(random.randint(7, 20))
+          if time.time() > self.next_iteration["Like"] and self.period_like_count > 0 and self.like():
+            self.like_count += 1
+            self.period_like_count -= 1
+            self.next_iteration["Like"] = time.time() + self.between_like
+           
+            #time.sleep(random.randint(7, 20))  
           if time.time() > self.next_iteration["Unfollow"] and self.period_unfollow_count > 0 and self.unfollow():  
             self.unfollow_count += 1
             self.period_unfollow_count -= 1
