@@ -34,12 +34,13 @@ class Instabot:
                  blacklist_usertags        = [],
                  tag_list                   = ['hashtag'],
                  time_to_unfollow           = 100 * 60*60*24,
-                 days_to_refollow           = 300
+                 days_to_refollow           = 300,
+                 chromedriver_path          ='C:\\Program Files (x86)\\Google\\Chrome\\Application\\chromedriver.exe'
                  ):
         
         
         self.username                   = username
-        self.passwort                   =  passwort
+        self.passwort                   = passwort
         self.post_caption               = post_caption
         self.max_followers_per_hour     = max_followers_per_hour
         self.max_unfollows_per_hour     = max_unfollows_per_hour
@@ -90,7 +91,7 @@ class Instabot:
         self.get_post_api               = None
         self.api                        = None
         self.post_instagram_api         = None
-        
+        self.chromedriver_path          = chromedriver_path
         
         signal.signal(signal.SIGTERM, self.cleanup)
         atexit.register(self.cleanup)
@@ -131,28 +132,27 @@ class Instabot:
         return False
      
       resp = self.collector.getMediaInfo(info["shortcode"])
-      if(resp == None):
-        return False
-      bad = self.containsBadKeyWord(resp["graphql"]["shortcode_media"]["owner"]["username"])
-      if  bad != None:
-       # print("%s contains %s !" %  (info["user"]["username"],bad))
-        return False 
-      
-      resp = self.collector.getUserInfo("",username=resp["graphql"]["shortcode_media"]["owner"]["username"])
-      if(resp == None):
-        return False
-       
-      if resp["user"]["followed_by"]["count"] > self.max_followers_on_follower:
-        #print("%s has too many follower" % (info["user"]["username"]))
-        return False
-      
-      if resp["user"]["followed_by"]["count"] < self.min_followers_on_follower:
-      #  print("%s has too little follower" % (info["user"]["username"]))
-        return False
+      try:
+        bad = self.containsBadKeyWord(resp["graphql"]["shortcode_media"]["owner"]["username"])
+        if  bad != None:
+         # print("%s contains %s !" %  (info["user"]["username"],bad))
+          return False 
         
-      
-      return resp["user"]["username"]
-
+        resp = self.collector.getUserInfo("",username=resp["graphql"]["shortcode_media"]["owner"]["username"])
+        
+         
+        if resp["user"]["followed_by"]["count"] > self.max_followers_on_follower:
+          #print("%s has too many follower" % (info["user"]["username"]))
+          return False
+        
+        if resp["user"]["followed_by"]["count"] < self.min_followers_on_follower:
+        #  print("%s has too little follower" % (info["user"]["username"]))
+          return False
+          
+        
+        return resp["user"]["username"]
+      except:
+        return False
     def post_picture(self):
         #print(os.path.abspath(os.path.join(__file__)))
         self.get_post_api.scanTopPost(400)
@@ -223,7 +223,7 @@ class Instabot:
       return random.choice(tag_list)
   
     def login(self):
-      self.api = InstagramAPI(self.username,self.passwort)
+      self.api = InstagramAPI(self.username,self.passwort,self.chromedriver_path)
       self.api.login()
       self.database.connect()
       

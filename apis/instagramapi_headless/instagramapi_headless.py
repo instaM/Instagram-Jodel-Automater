@@ -1,9 +1,13 @@
 # -*- coding: utf-8 -*-
 import time
 import random
+import os
 from selenium import webdriver
-import selenium.webdriver.chrome.service as service
+
 from selenium.webdriver.common.keys import Keys
+
+from selenium.webdriver.chrome.options import Options
+  
 from selenium.webdriver.common.action_chains import ActionChains
 
 class InstagramAPI:
@@ -16,23 +20,26 @@ class InstagramAPI:
             self,
             username,
             password,
-            chromedriver_path='C:\\Program Files (x86)\\Google\\Chrome\\Application\\chromedriver.exe'
+            chromedriver_path 
             ):
         self.username = username
         self.password = password
         self.chromedriver_path = chromedriver_path
         self.driver = None
-        self.service = service
+        
         self.failCounter = 0
     def login (self):
        
-        options = webdriver.ChromeOptions()
-        #options.add_argument('headless')
+        options = Options()
+        options.add_argument('headless')
 
-        options.add_argument(f'user-agent={self.user_agent}')
-        options.add_argument("--lang=en")
-        #options.binary_location = self.chrome_path
+        options.add_argument('user-agent={%s}' % (self.user_agent))
+        options.add_argument("no-sandbox")
+        options.add_argument("disable-setuid-sandbox")
+        options.add_argument("lang=en")
+        
         self.driver = webdriver.Chrome(executable_path=self.chromedriver_path,chrome_options=options)
+        
         self.driver.get(self.login_url);
         login_name=self.driver.find_element_by_name("username")
         login_pw=self.driver.find_element_by_name("password")
@@ -109,23 +116,24 @@ class InstagramAPI:
         return True
          
     def likeNewsFeedMedia(self):
-        
-        if(self.driver.current_url != self.base_url):
-            print("hier")
-            self.driver.get(self.base_url)
-            time.sleep(5)
-        
-        like = self.driver.find_elements_by_xpath("//a[@role='button']/span[text()='Like']/..")
-        if(len(like) == 0):
-            return False
-        to_like=   random.choice(like)
-        actions = ActionChains(self.driver)
-        actions.move_to_element(to_like).perform()
-       
-        self.driver.execute_script("window.scrollBy(0, 300)") 
-        time.sleep(2)
-        to_like.click()
-    
+        try:
+          if(self.driver.current_url != self.base_url):
+              print("hier")
+              self.driver.get(self.base_url)
+              time.sleep(5)
+          
+          like = self.driver.find_elements_by_xpath("//a[@role='button']/span[text()='Like']/..")
+          if(len(like) == 0):
+              return False
+          to_like = random.choice(like)
+          actions = ActionChains(self.driver)
+          actions.move_to_element(to_like).perform()
+         
+          self.driver.execute_script("window.scrollBy(0, 200)") 
+          time.sleep(2)
+          to_like.click()
+        except:
+          return False
         return True
     
     
