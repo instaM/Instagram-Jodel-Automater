@@ -33,7 +33,7 @@ class Instabot:
                  min_followers_on_follower = 0,
                  blacklist_usertags        = [],
                  tag_list                   = ['hashtag'],
-                 time_to_unfollow           = 100 * 60*60*24,
+                 time_to_unfollow           = 3 * 60*60*24,
                  days_to_refollow           = 300,
                  chromedriver_path          ='C:\\Program Files (x86)\\Google\\Chrome\\Application\\chromedriver.exe'
                  ):
@@ -117,35 +117,39 @@ class Instabot:
   
   
     def worthy(self,info):
-      info = info["node"]
-      if self.database.check_to_follow(info["owner"]["id"]) == True:
-        #print("Media %s and %s soon to be liked and followed!" %(info["pk"],info["user"]["username"]))
-        return False
-      if info["edge_liked_by"]["count"] > self.max_likes_per_picture:
-       # print("Media %s has too many likes" %(info["pk"]))
-        return False
-      if  self.database.check_following(info["owner"]["id"]):
-       # print("You are already following %s" %(info["user"]["username"]))
-        return False
-      if self.database.check_blacklist_refollow(info["owner"]["id"]) == False:
-       # print("You have followed  %s in the last 30 days"%(info["user"]["username"]))
-        return False
-     
-      resp = self.collector.getMediaInfo(info["shortcode"])
       try:
+        info = info["node"]
+        if self.database.check_to_follow(info["owner"]["id"]) == True:
+          #print("Media %s and %s soon to be liked and followed!" %(info["pk"],info["user"]["username"]))
+          return False
+        if info["edge_liked_by"]["count"] > self.max_likes_per_picture:
+         # print("Media %s has too many likes" %(info["pk"]))
+          return False
+        if  self.database.check_following(info["owner"]["id"]):
+         # print("You are already following %s" %(info["user"]["username"]))
+          return False
+        if self.database.check_blacklist_refollow(info["owner"]["id"]) == False:
+         # print("You have followed  %s in the last 30 days"%(info["user"]["username"]))
+          return False
+       
+        resp = self.collector.getMediaInfo(info["shortcode"])
+      
         bad = self.containsBadKeyWord(resp["graphql"]["shortcode_media"]["owner"]["username"])
         if  bad != None:
          # print("%s contains %s !" %  (info["user"]["username"],bad))
           return False 
-        
-        resp = self.collector.getUserInfo("",username=resp["graphql"]["shortcode_media"]["owner"]["username"])
+        bad = self.containsBadKeyWord(resp["graphql"]["user"]["full_name"])
+        if  bad != None:
+         # print("%s contains %s !" %  (info["user"]["username"],bad))
+          return False 
+        resp = self.collector.getUserInfo(resp["graphql"]["shortcode_media"]["owner"]["username"])
         
          
-        if resp["user"]["followed_by"]["count"] > self.max_followers_on_follower:
+        if resp["user"]["edge_followed_by"]["count"] > self.max_followers_on_follower:
           #print("%s has too many follower" % (info["user"]["username"]))
           return False
         
-        if resp["user"]["followed_by"]["count"] < self.min_followers_on_follower:
+        if resp["user"]["edge_followed_by"]["count"] < self.min_followers_on_follower:
         #  print("%s has too little follower" % (info["user"]["username"]))
           return False
           
@@ -153,6 +157,7 @@ class Instabot:
         return resp["user"]["username"]
       except:
         return False
+      
     def post_picture(self):
         #print(os.path.abspath(os.path.join(__file__)))
         self.get_post_api.scanTopPost(400)
