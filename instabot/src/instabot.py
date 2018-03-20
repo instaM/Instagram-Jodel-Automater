@@ -109,7 +109,7 @@ class Instabot:
         return tag_list_left
         
     def containsBadKeyWord(self,name):
-      name =
+      
       for bad in self.blacklist_usertags:
         
         if bad in str(name).lower(): 
