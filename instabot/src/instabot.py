@@ -9,7 +9,7 @@ lib_path = os.path.abspath(os.path.join(__file__, '..', '..','..', 'apis', 'inst
 sys.path.append(lib_path)
 from database import InstaDB
 from instagramapi_headless import InstagramAPI
-from JodelBot import JodelBot
+#from JodelBot import JodelBot
 from PIL import Image
 from instapy_cli.cli import InstapyCli
 import random
@@ -137,12 +137,15 @@ class Instabot:
       
         bad = self.containsBadKeyWord(resp["graphql"]["shortcode_media"]["owner"]["username"])
         if  bad != None:
-         # print("%s contains %s !" %  (info["user"]["username"],bad))
+          print("%s contains %s !" %  (resp["graphql"]["shortcode_media"]["owner"]["username"],bad))
+          
           return False 
         bad = self.containsBadKeyWord(resp["graphql"]["user"]["full_name"])
         if  bad != None:
          # print("%s contains %s !" %  (info["user"]["username"],bad))
+          print("%s contains %s !" %  (resp["graphql"]["shortcode_media"]["owner"]["username"],bad))
           return False 
+          
         resp = self.collector.getUserInfo(resp["graphql"]["shortcode_media"]["owner"]["username"])
         
          
@@ -154,7 +157,7 @@ class Instabot:
         #  print("%s has too little follower" % (info["user"]["username"]))
           return False
           
-        
+        print("Hier")
         return resp["user"]["username"]
       except:
         return False
