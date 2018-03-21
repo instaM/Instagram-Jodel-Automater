@@ -140,7 +140,7 @@ class Instabot:
           print("%s contains %s !" %  (resp["graphql"]["shortcode_media"]["owner"]["username"],bad))
           
           return False 
-        bad = self.containsBadKeyWord(resp["graphql"]["user"]["full_name"])
+        bad = self.containsBadKeyWord(resp["graphql"]["shortcode_media"]["owner"]["full_name"]))
         if  bad != None:
          # print("%s contains %s !" %  (info["user"]["username"],bad))
           print("%s contains %s !" %  (resp["graphql"]["shortcode_media"]["owner"]["username"],bad))
