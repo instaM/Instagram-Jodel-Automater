@@ -80,7 +80,7 @@ class InstagramAPI:
         follow_button = self.driver.find_elements_by_xpath("//button[.//text()='Following']")
         if(len(follow_button) == 0):
             return False
-         try:
+        try:
             follow_button[0].click()
         except Exception as e:
             print(e)

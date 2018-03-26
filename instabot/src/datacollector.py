@@ -5,7 +5,7 @@ class Collector:
     url_user_detail = 'https://www.instagram.com/%s/?__a=1'
     url_tag = 'https://www.instagram.com/explore/tags/%s/?__a=1'
     url_media_detail = 'https://www.instagram.com/p/%s/?__a=1'
-    def getUserInfo(self,user_id,username):
+    def getUserInfo(self,username):
         info = {}
        
         try:    
@@ -14,7 +14,7 @@ class Collector:
             all_data = json.loads(r.text)
             
            
-            return all_data
+            return all_data["graphql"]
         except:
             
             print("Except on getUserInfo!")
