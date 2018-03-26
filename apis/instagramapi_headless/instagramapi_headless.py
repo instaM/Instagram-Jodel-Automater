@@ -80,7 +80,11 @@ class InstagramAPI:
         follow_button = self.driver.find_elements_by_xpath("//button[.//text()='Following']")
         if(len(follow_button) == 0):
             return False
-        follow_button[0].click()
+         try:
+            follow_button[0].click()
+        except Exception as e:
+            print(e)
+            return False
         
         return True
     def likeRandomUserMedia(self,username):
@@ -118,7 +122,7 @@ class InstagramAPI:
     def likeNewsFeedMedia(self):
         try:
           if(self.driver.current_url != self.base_url):
-              print("hier")
+              
               self.driver.get(self.base_url)
               time.sleep(5)
           

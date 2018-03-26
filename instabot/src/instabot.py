@@ -137,13 +137,13 @@ class Instabot:
       
         bad = self.containsBadKeyWord(resp["graphql"]["shortcode_media"]["owner"]["username"])
         if  bad != None:
-          print("%s contains %s !" %  (resp["graphql"]["shortcode_media"]["owner"]["username"],bad))
+          #print("%s contains %s !" %  (resp["graphql"]["shortcode_media"]["owner"]["username"],bad))
           
           return False 
         bad = self.containsBadKeyWord(resp["graphql"]["shortcode_media"]["owner"]["full_name"])
         if  bad != None:
          # print("%s contains %s !" %  (info["user"]["username"],bad))
-          print("%s contains %s !" %  (resp["graphql"]["shortcode_media"]["owner"]["username"],bad))
+          #print("%s contains %s !" %  (resp["graphql"]["shortcode_media"]["owner"]["username"],bad))
           return False 
           
         resp = self.collector.getUserInfo(resp["graphql"]["shortcode_media"]["owner"]["username"])
@@ -157,7 +157,7 @@ class Instabot:
         #  print("%s has too little follower" % (info["user"]["username"]))
           return False
           
-        print("Hier")
+        
         return resp["user"]["username"]
       except:
         return False
@@ -279,7 +279,7 @@ class Instabot:
             print("Available Likes #%i"%(self.likes_per_tag_left[tag]))
             tag_feed = self.collector.getHashtagFeed(tag,3)
           
-          if (len(tag_feed) > 0  and self.database.get_to_follow_count() < 30 ):
+          if (len(tag_feed) > 0):
             username = self.worthy(tag_feed[0])
             if (username != False):
               self.database.insert_to_follow(tag_feed[0]["node"]["owner"]["id"],username,tag)
