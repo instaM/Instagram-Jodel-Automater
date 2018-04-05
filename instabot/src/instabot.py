@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import os
 import sys
+import smtplib
 lib_path = os.path.abspath(os.path.join(__file__, '..', '..','..', 'apis', 'JodelBot'))
 sys.path.append(lib_path)
 lib_path = os.path.abspath(os.path.join(__file__, '..', '..','..', 'apis', 'instagramapi_headless'))
@@ -35,10 +36,13 @@ class Instabot:
                  tag_list                   = ['hashtag'],
                  time_to_unfollow           = 3 * 60*60*24,
                  days_to_refollow           = 300,
-                 chromedriver_path          ='C:\\Program Files (x86)\\Google\\Chrome\\Application\\chromedriver.exe'
+                 chromedriver_path          ='C:\\Program Files (x86)\\Google\\Chrome\\Application\\chromedriver.exe',
+                 email                      = ""
+                 email_pw                   = ""
                  ):
         
-        
+        self.email                      = email
+        self.email_pw                   = email_pw
         self.username                   = username
         self.passwort                   = passwort
         self.post_caption               = post_caption
@@ -112,13 +116,14 @@ class Instabot:
       
       for bad in self.blacklist_usertags:
         
-        if bad in str(name).lower(): 
+        if bad in name.encode('utf-8', 'ignore').lower(): 
           return bad
       return None
   
   
     def worthy(self,info):
       try:
+        
         info = info["node"]
         if self.database.check_to_follow(info["owner"]["id"]) == True:
           #print("Media %s and %s soon to be liked and followed!" %(info["pk"],info["user"]["username"]))
@@ -140,6 +145,7 @@ class Instabot:
           #print("%s contains %s !" %  (resp["graphql"]["shortcode_media"]["owner"]["username"],bad))
           
           return False 
+       
         bad = self.containsBadKeyWord(resp["graphql"]["shortcode_media"]["owner"]["full_name"])
         if  bad != None:
          # print("%s contains %s !" %  (info["user"]["username"],bad))
@@ -159,7 +165,10 @@ class Instabot:
           
         
         return resp["user"]["username"]
-      except:
+      except Exception as e:
+        print(e)
+        return False
+        
         return False
       
     def post_picture(self):
@@ -203,12 +212,15 @@ class Instabot:
       if(len(unfollower_list) == 0):
         return False
       unfollower = random.choice(unfollower_list)
-      self.api.unfollow(unfollower[1])
-      self.database.delete_follower(unfollower[0])
-      self.database.insert_blacklist(unfollower[0],unfollower[1])
-      print("#%i unfollow User %s"%(self.unfollow_count,unfollower[1])) 
+      if(self.api.unfollow(unfollower[1]) == True):
+        self.database.delete_follower(unfollower[0])
+        self.database.insert_blacklist(unfollower[0],unfollower[1])
+        print("#%i unfollow User %s"%(self.unfollow_count,unfollower[1])) 
+        return True
+      else:
+        
+        return False
       
-      return True
       
     def like(self):
         to_follow_list = self.database.get_to_follows(followed=1)
@@ -230,7 +242,21 @@ class Instabot:
         return True
     def get_random_tag(self,tag_list):
       return random.choice(tag_list)
-  
+    def send_email_notification(self,msg):
+      server = smtplib.SMTP("smtp.***REMOVED***", 587)
+      server.ehlo()
+      server.starttls()
+      
+      server.login(self.email,self.email_pw)
+      msg = "\r\n".join([
+        "From: user_me@***REMOVED***",
+        "To: "+self.email,
+        "Subject: Instabot Daily Update",
+        "",
+        message
+        ])
+      server.sendmail("Instabot", self.email, msg)
+      
     def login(self):
       self.api = InstagramAPI(self.username,self.passwort,self.chromedriver_path)
       self.api.login()
@@ -252,10 +278,14 @@ class Instabot:
         self.start_time = time.time()
         self.end_time   = self.start_time + self.period
         self.day_count  = self.start_time + 60*60*24
-        period_count    = 0
+        #self.day_count = 0
+        period_count    = 1
         tag_feed = {}
         tag_list = self.tag_list[:]
         tag = ""
+        resp = self.collector.getUserInfo(self.username)
+        old_following = resp["user"]["edge_followed_by"]["count"]
+        old_follow    = resp["user"]["edge_follow"]["count"]
         print("Follow every %i seconds"% (self.between_follow))
         print("Unfollow every %i seconds"% (self.between_unfollow))
         print("Like every %i seconds"% (self.between_like))
@@ -263,6 +293,20 @@ class Instabot:
         print("Post every %i seconds"% (self.between_post))
         while True:
           if(time.time() > self.day_count):
+              try:
+                resp = self.collector.getUserInfo(self.username)
+                new_following = resp["user"]["edge_followed_by"]["count"]
+                new_follow    = resp["user"]["edge_follow"]["count"]
+                message = ("You got %s Followers and you follow %s Accounts\n\n Last time you had %s Followers and you followed %s \nThats a difference of: %s \n\nThis day:\n %s/%s got followed\n %s/%s got liked\n %s/%s NewsFeed Media got liked\n %s/%s got unfollowed") %(new_following,new_follow,old_following,old_follow,new_following-old_following,self.follow_count,self.max_followers_per_hour*period_count,
+                              self.like_count,self.max_likes_per_hour*period_count,self.like_newsfeed_count, self.max_like_newsfeed_per_hour*period_count,
+                              self.unfollow_count,self.max_followers_per_hour*period_count)
+                
+                
+                if(self.email != ""):
+                  self.send_email_notification(message)
+              except:
+                print("Failed email notification")
+                
               self.period_post_count = self.max_posts_per_day
               self.day_count = time.time() + 60*60*24
           if(time.time() > self.end_time):
