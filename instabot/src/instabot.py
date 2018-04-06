@@ -37,7 +37,7 @@ class Instabot:
                  time_to_unfollow           = 3 * 60*60*24,
                  days_to_refollow           = 300,
                  chromedriver_path          ='C:\\Program Files (x86)\\Google\\Chrome\\Application\\chromedriver.exe',
-                 email                      = ""
+                 email                      = "",
                  email_pw                   = ""
                  ):
         
