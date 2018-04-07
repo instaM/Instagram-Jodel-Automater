@@ -5,7 +5,7 @@ from InstagramAPI import InstagramAPI
 
 import sys
 
-API = InstagramAPI("***REMOVED***", "***REMOVED***")
+API = InstagramAPI("","")
 
 API.login() # login
 db = InstaDB()
