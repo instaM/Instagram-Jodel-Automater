@@ -15,7 +15,7 @@ actual_following = API.getTotalSelfFollowings()
 actual_follower  = API.getTotalSelfFollowers()
 print("%s accounts follow you" % (len(actual_follower)))
 print("You are following %s accounts" % (len(actual_following)))
-print("%s Database entries" %(len(db_follow)))
+
 
 
 #print(API.LastJson)
@@ -36,8 +36,8 @@ for entry in actual_follower:
 for entry in actual_following:
     simple_following[str(entry["pk"])] = entry["username"]
 
-    
-        
+print("%s Database entries" %(len(simple_db)))    
+print("%s Whitelist entries" %(len(whitelist)))  
 for entry in simple_follower:
     if entry not in simple_following:
         fan +=1
@@ -88,25 +88,25 @@ print("%s accounts are following you and you are not following back" % (fan))
 
 
 print("Following accounts are in your whitelist, but do not follow you back(y = insert whitelist, n = insert not whitelist")
-for follow in follow_not_in_wl:
+for entry in follow_not_in_wl:
     decision = ""
     while(decision != 'y' and decision !='n'):
         
-        decision = input(follow_not_in_wl[follow]+":")
+        decision = raw_input(follow_not_in_wl[entry]+":")
         
     if(decision=="y"):
         print("Inserted into whitelist")
-        db.insert_follower(entry,simple_following[entry],1, 0, "sanitize")
+        db.insert_follower(entry,follow_not_in_wl[entry],1, 0, "sanitize")
     else:
         print("Account will be unfollowed soon")
-        db.insert_follower(entry,simple_following[entry],0, 0, "sanitize")    
+        db.insert_follower(entry,follow_not_in_wl[entry],0, 0, "sanitize")    
         
 print("Following accounts are in not in your whitelist, but do follow you back(y = insert whitelist, n = insert not whitelist")
 for entry in simple_following:
     decision = ""
     while(decision != 'y' and decision !='n'):
         
-        decision = input(simple_following[entry]+":")
+        decision = raw_input(simple_following[entry]+":")
         
     if(decision=="y"):
         print(simple_following[entry]+ " inserted into whitelist")
