@@ -182,7 +182,7 @@ class Instabot:
 
     def like_newsfeed(self):
      
-      return self.api.likeNewsFeedMedia
+      return self.api.likeNewsFeedMedia()
   
     def follow(self):
      
@@ -233,7 +233,6 @@ class Instabot:
         if(self.api.likeRandomUserMedia(follower[1]) == False):
             self.database.delete_to_follow(follower[0])
             return False
-        self.database.insert_follower(follower[0],follower[1],0,time.time() + self.time_to_unfollow,follower[2])
         if(follower[4] == 1):
             self.database.delete_to_follow(follower[0])
         else:
