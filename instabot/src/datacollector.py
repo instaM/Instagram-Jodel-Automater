@@ -1,10 +1,13 @@
 import requests 
 import json
 import time
+import logging
+import sys
 class Collector:
     url_user_detail = 'https://www.instagram.com/%s/?__a=1'
     url_tag = 'https://www.instagram.com/explore/tags/%s/?__a=1'
     url_media_detail = 'https://www.instagram.com/p/%s/?__a=1'
+    logger = logging.getLogger("instalog.collector")
     def getUserInfo(self,username):
         info = {}
        
@@ -15,9 +18,11 @@ class Collector:
             
            
             return all_data["graphql"]
-        except:
+        except Exception as e:
             
-            print("Except on getUserInfo!")
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+        
+            self.logger.error(exc_type+" - "+ exc_obj.message+" - "+ exc_tb.tb_lineno)
             
             return None
            
@@ -34,14 +39,16 @@ class Collector:
             
            
             return all_data
-        except:
+        except Exception as e:
             
-            print("Except on get_media!")
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+        
+            self.logger.error(exc_type+" - "+ exc_obj.message+" - "+ exc_tb.tb_lineno)
             
             return None
       
     def getHashtagFeed(self, tag,max):
-        """ Get media ID set, by your hashtag """
+        
         feed = []
         next_id = None
    
@@ -69,7 +76,9 @@ class Collector:
                     feed.append(post)
                 
             except Exception as e:
-                print(e)
+                exc_type, exc_obj, exc_tb = sys.exc_info()
+        
+                self.logger.error(exc_type+" - "+ exc_obj.message+" - "+ exc_tb.tb_lineno)
                 return []
                         
               

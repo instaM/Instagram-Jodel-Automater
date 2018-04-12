@@ -5,7 +5,7 @@ from InstagramAPI import InstagramAPI
 
 import sys
 
-API = InstagramAPI("","")
+API = InstagramAPI("***REMOVED***","***REMOVED***")
 
 API.login() # login
 db = InstaDB()
@@ -53,7 +53,7 @@ for entry in list(whitelist):
         db.delete_follower(entry)
         del whitelist[entry]
 
-print("%s remaining Database entries" % (len(db_follow)))
+print("%s remaining Database entries" % (len(simple_db)))
 print("%s remaining Whitelist entries" % (len(whitelist)))        
 #Not following from whitelist
 for entry in whitelist:
@@ -80,7 +80,8 @@ with open('following.txt', 'w') as outfile:
     json.dump(simple_following, outfile, indent=4, sort_keys=True)
 with open('whitelist.txt', 'w') as outfile:
     json.dump(whitelist, outfile, indent=4, sort_keys=True)
-
+with open('follow_no_refollow.txt', 'w') as outfile:
+    json.dump(follow_no_refollow, outfile, indent=4, sort_keys=True)
 print("%s accounts are not following you back" %(len(follow_no_refollow)))
 print("%s accounts are not following you from your whitelist" %(len(follow_not_in_wl)))
 print("%s accounts are following you back not from your whitelist" %(len(simple_following)))
