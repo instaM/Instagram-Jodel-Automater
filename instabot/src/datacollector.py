@@ -22,7 +22,7 @@ class Collector:
             
             exc_type, exc_obj, exc_tb = sys.exc_info()
         
-            self.logger.error(exc_type+" - "+ exc_obj.message+" - "+ exc_tb.tb_lineno)
+            self.logger.error(str(exc_type)+" - "+ exc_obj.message+" - "+ str(exc_tb.tb_lineno))
             
             return None
            
@@ -43,7 +43,7 @@ class Collector:
             
             exc_type, exc_obj, exc_tb = sys.exc_info()
         
-            self.logger.error(exc_type+" - "+ exc_obj.message+" - "+ exc_tb.tb_lineno)
+            self.logger.error(str(exc_type)+" - "+ exc_obj.message+" - "+ str(exc_tb.tb_lineno))
             
             return None
       
@@ -78,7 +78,7 @@ class Collector:
             except Exception as e:
                 exc_type, exc_obj, exc_tb = sys.exc_info()
         
-                self.logger.error(exc_type+" - "+ exc_obj.message+" - "+ exc_tb.tb_lineno)
+                self.logger.error(str(exc_type)+" - "+ exc_obj.message+" - "+ str(exc_tb.tb_lineno))
                 return []
                         
               

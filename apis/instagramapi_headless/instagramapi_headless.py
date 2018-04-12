@@ -79,7 +79,7 @@ class InstagramAPI:
         except Exception as e:
             exc_type, exc_obj, exc_tb = sys.exc_info()
         
-            self.logger.error(exc_type+" - "+ exc_obj.message+" - "+ exc_tb.tb_lineno)
+            self.logger.error(str(exc_type)+" - "+ exc_obj.message+" - "+ str(exc_tb.tb_lineno))
             self.driver.save_screenshot(self.screenshot_path+datetime.datetime.now().strftime(self.time_format))
             return False
         
@@ -130,7 +130,7 @@ class InstagramAPI:
             self.logger.info("#%i Failed" %(self.failCounter))
             exc_type, exc_obj, exc_tb = sys.exc_info()
         
-            self.logger.error(exc_type+" - "+ exc_obj.message+" - "+ exc_tb.tb_lineno)
+            self.logger.error(str(exc_type)+" - "+ exc_obj.message+" - "+ str(exc_tb.tb_lineno))
             self.driver.save_screenshot(self.screenshot_path+datetime.datetime.now().strftime(self.time_format))
             return False   
         
@@ -156,7 +156,7 @@ class InstagramAPI:
         except Exception as e:
           exc_type, exc_obj, exc_tb = sys.exc_info()
         
-          self.logger.error(exc_type+" - "+ exc_obj.message+" - "+ exc_tb.tb_lineno)
+          self.logger.error(str(exc_type)+" - "+ exc_obj.message+" - "+ str(exc_tb.tb_lineno))
           self.driver.save_screenshot(self.screenshot_path+datetime.datetime.now().strftime(self.time_format))
           return False
         return True
