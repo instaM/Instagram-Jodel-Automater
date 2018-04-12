@@ -1,2 +1,7 @@
+**/logs
+*.pyc
+*.sl3
+*.txt
+bot_run.py
 **/.idea
 **/.DS_Store
