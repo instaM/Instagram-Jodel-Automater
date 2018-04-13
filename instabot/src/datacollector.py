@@ -3,21 +3,24 @@ import json
 import time
 import logging
 import sys
+import re
 class Collector:
-    url_user_detail = 'https://www.instagram.com/%s/?__a=1'
+    url_user_detail = 'https://www.instagram.com/%s/'
     url_tag = 'https://www.instagram.com/explore/tags/%s/?__a=1'
     url_media_detail = 'https://www.instagram.com/p/%s/?__a=1'
-    logger = logging.getLogger("instalog.collector")
+    logger = logging.getLogger("instalog")
     def getUserInfo(self,username):
         info = {}
        
         try:    
             url_det = self.url_user_detail % (username)   
             r = requests.get(url_det)
-            all_data = json.loads(r.text)
             
-           
-            return all_data["graphql"]
+            #
+            res = re.search('window._sharedData =(.*);</script>',r.text)
+            all_data = json.loads(res.group(1))
+            
+            return all_data["entry_data"]["ProfilePage"][0]["graphql"]
         except Exception as e:
             
             exc_type, exc_obj, exc_tb = sys.exc_info()
