@@ -74,12 +74,12 @@ class InstagramAPI:
           follow_button = self.driver.find_elements_by_xpath("//button[.//text()='Follow']")
           if(len(follow_button) == 0):
               return False
-          
-              follow_button[0].click()
+          self.driver.execute_script("window.scrollTo(0, 0)") 
+          follow_button[0].click()
         except Exception as e:
             exc_type, exc_obj, exc_tb = sys.exc_info()
         
-            self.logger.error(str(exc_type)+" - "+ exc_obj.message+" - "+ str(exc_tb.tb_lineno))
+            self.logger.error(str(exc_type)+" - "+ str(exc_obj.message)+" - "+ str(exc_tb.tb_lineno))
             self.driver.save_screenshot(self.screenshot_path+datetime.datetime.now().strftime(self.time_format))
             return False
         
@@ -93,13 +93,15 @@ class InstagramAPI:
               
           follow_button = self.driver.find_elements_by_xpath("//button[.//text()='Following']")
           if(len(follow_button) == 0):
+              
               return False
-        
+
+          self.driver.execute_script("window.scrollTo(0, 0)") 
           follow_button[0].click()
         except Exception as e:
             self.logger.error(e.message)
             self.driver.save_screenshot(self.screenshot_path+datetime.datetime.now().strftime(self.time_format))
-            return False
+            return None
         
         return True
     def likeRandomUserMedia(self,username):
@@ -130,7 +132,7 @@ class InstagramAPI:
             self.logger.info("#%i Failed" %(self.failCounter))
             exc_type, exc_obj, exc_tb = sys.exc_info()
         
-            self.logger.error(str(exc_type)+" - "+ exc_obj.message+" - "+ str(exc_tb.tb_lineno))
+            self.logger.error(str(exc_type)+" - "+ str(exc_obj.message)+" - "+ str(exc_tb.tb_lineno))
             self.driver.save_screenshot(self.screenshot_path+datetime.datetime.now().strftime(self.time_format))
             return False   
         
@@ -156,7 +158,7 @@ class InstagramAPI:
         except Exception as e:
           exc_type, exc_obj, exc_tb = sys.exc_info()
         
-          self.logger.error(str(exc_type)+" - "+ exc_obj.message+" - "+ str(exc_tb.tb_lineno))
+          self.logger.error(str(exc_type)+" - "+ str(exc_obj.message)+" - "+ str(exc_tb.tb_lineno))
           self.driver.save_screenshot(self.screenshot_path+datetime.datetime.now().strftime(self.time_format))
           return False
         return True

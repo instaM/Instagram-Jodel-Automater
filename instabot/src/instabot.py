@@ -175,7 +175,7 @@ class Instabot:
       except Exception as e:
         exc_type, exc_obj, exc_tb = sys.exc_info()
         
-        self.logger.error(str(exc_type)+" - "+ exc_obj.message+" - "+ str(exc_tb.tb_lineno))
+        self.logger.error(str(exc_type)+" - "+ str(exc_obj.message)+" - "+ str(exc_tb.tb_lineno))
         return False
         
       return False
@@ -218,6 +218,7 @@ class Instabot:
     def unfollow(self):
      
       unfollower_list = self.database.get_unfollows()
+      
       if(len(unfollower_list) == 0):
         return False
       unfollower = random.choice(unfollower_list)
@@ -227,7 +228,7 @@ class Instabot:
         self.logger.info("#%i unfollow User %s"%(self.unfollow_count,unfollower[1])) 
         return True
       else:
-        
+        self.database.delete_follower(unfollower[0])
         return False
       
       
@@ -276,7 +277,7 @@ class Instabot:
     def reset_period_counter(self):
       self.logger.info ("This time period #%i Media got liked"      %(self.max_likes_per_period-self.period_like_count))
       self.logger.info ("This time period #%i Accounts got followed"%(self.max_followers_per_period-self.period_follow_count))
-      self.logger.info ("This time period #%i Accounts got followed"%(self.max_unfollows_per_period-self.period_unfollow_count))
+      self.logger.info ("This time period #%i Accounts got unfollowed"%(self.max_unfollows_per_period-self.period_unfollow_count))
       self.period_like_count          = self.max_likes_per_period
       self.period_follow_count        = self.max_followers_per_period
       self.period_unfollow_count      = self.max_unfollows_per_period
