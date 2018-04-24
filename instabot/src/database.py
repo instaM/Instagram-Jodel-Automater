@@ -34,6 +34,9 @@ class InstaDB:
     self.cur.execute("REPLACE INTO %s VALUES('%s','%s',%i,'%s')" % (self.following,uni_id,name,whitelist,str(date)))
     self.cur.execute("REPLACE INTO %s VALUES('%s','%s','%s')" % (self.all_follow,uni_id,name,hashtag))
     self.con.commit()
+  def insert_all_follow(self,uni_id,name,hashtag):
+    self.cur.execute("INSERT INTO %s VALUES('%s','%s','%s')" % (self.all_follow,uni_id,name,hashtag))
+    self.con.commit()
   def insert_to_follow(self,uni_id,name,hashtag):
     self.cur.execute("REPLACE INTO %s VALUES('%s','%s','%s',0,0)" % (self.to_follow,uni_id,name,hashtag))
     self.con.commit()
@@ -61,6 +64,11 @@ class InstaDB:
     if not row : return False
    
     return True
+  def get_all_follow(self):
+    self.cur.execute("SELECT * from %s" % (self.all_follow))
+    row = self.cur.fetchall()
+    
+    return row
   def get_following_all(self):
     self.cur.execute("SELECT * from %s" % (self.following))
     row = self.cur.fetchall()

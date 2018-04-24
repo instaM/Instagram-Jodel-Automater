@@ -11,8 +11,10 @@ API.login() # login
 db = InstaDB()
 db.connect()
 db_follow = db.get_following_all()
+db_all_follow = db.get_all_follow()
 actual_following = API.getTotalSelfFollowings()
 actual_follower  = API.getTotalSelfFollowers()
+
 print("%s accounts follow you" % (len(actual_follower)))
 print("You are following %s accounts" % (len(actual_following)))
 
@@ -23,9 +25,12 @@ follow_no_refollow = {}
 simple_following = {}
 simple_follower = {}
 simple_db = {}
+simple_all_follower = {}
 whitelist = {}
 follow_not_in_wl = {}
 fan = 0
+for entry in db_all_follow:
+  simple_all_follower[entry[0]] = entry[1]
 for entry in db_follow:
     if(entry[2] == 1):
         whitelist[entry[0]]= entry[1]
@@ -54,7 +59,10 @@ for entry in list(whitelist):
         del whitelist[entry]
 
 print("%s remaining Database entries" % (len(simple_db)))
-print("%s remaining Whitelist entries" % (len(whitelist)))        
+print("%s remaining Whitelist entries" % (len(whitelist)))  
+for entry in simple_db:
+  if entry not in simple_all_follower:
+    db.insert_all_follow(entry,simple_db[entry],"sanitized")
 #Not following from whitelist
 for entry in whitelist:
     if(entry not in simple_follower):
