@@ -49,6 +49,7 @@ class InstagramAPI:
         self.driver = webdriver.Chrome(executable_path=self.chromedriver_path,chrome_options=options)
         
         self.driver.get(self.login_url);
+        time.sleep(2)
         login_name=self.driver.find_element_by_name("username")
         login_pw=self.driver.find_element_by_name("password")
         login_name.send_keys(self.username)

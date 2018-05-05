@@ -33,6 +33,7 @@ class Instabot:
                  max_like_newsfeed_per_hour = 0,
                  max_followers_on_follower = 1000000,
                  min_followers_on_follower = 0,
+                 max_followers_to_follow_ratio = 1.3,
                  blacklist_usertags        = [],
                  tag_list                   = ['hashtag'],
                  time_to_unfollow           = 3 * 60*60*24,
@@ -40,11 +41,15 @@ class Instabot:
                  chromedriver_path          ='C:\\Program Files (x86)\\Google\\Chrome\\Application\\chromedriver.exe',
                  email                      = "",
                  email_pw                   = "",
+                 email_per_day              = 1,
                  logging_path               = "../log/instalog.log"
                  ):
         
         self.email                      = email
         self.email_pw                   = email_pw
+        self.email_per_day              = email_per_day
+        
+        self.between_email              = self.safe_div(24*60*60, email_per_day)
         self.username                   = username
         self.passwort                   = passwort
         self.post_caption               = post_caption
@@ -53,7 +58,7 @@ class Instabot:
         self.max_likes_per_hour         = max_likes_per_hour
         self.max_like_newsfeed_per_hour = max_like_newsfeed_per_hour
         self.max_posts_per_day          = max_posts_per_day
-       
+        self.max_followers_to_follow_ratio  = max_followers_to_follow_ratio
         self.time_to_unfollow           = time_to_unfollow
         self.days_to_refollow           = days_to_refollow
         self.like_newsfeed_count        = 0
@@ -61,6 +66,7 @@ class Instabot:
         self.follow_count               = 0
         self.unfollow_count             = 0
         self.post_count                 = 0
+        self.send_email_count           = self.email_per_day
         self.max_likes_per_tag          = max_likes_per_tag
         self.max_likes_per_picture      = max_likes_per_picture
         self.max_followers_on_follower  = max_followers_on_follower
@@ -165,7 +171,9 @@ class Instabot:
         if resp["user"]["edge_followed_by"]["count"] > self.max_followers_on_follower:
           self.logger.info("%s has too many follower" % (resp["user"]["username"]))
           return False
-        
+        if (resp["user"]["edge_followed_by"]["count"]/resp["user"]["edge_follow"]["count"]) > self.max_followers_to_follow_ratio:
+          self.logger.info("%s bad Follow Ratio(%f)" % (resp["user"]["username"],(resp["user"]["edge_followed_by"]["count"]/resp["user"]["edge_follow"]["count"])))
+          return False
         if resp["user"]["edge_followed_by"]["count"] < self.min_followers_on_follower:
           self.logger.info("%s has too little follower" % (resp["user"]["username"]))
           return False
@@ -251,21 +259,37 @@ class Instabot:
         return True
     def get_random_tag(self,tag_list):
       return random.choice(tag_list)
-    def send_email_notification(self,msg):
-      server = smtplib.SMTP("smtp.***REMOVED***", 587)
-      server.ehlo()
-      server.starttls()
+    def send_email_notification(self):
+      try:
+          resp = self.collector.getUserInfo(self.username)
+          new_following = resp["user"]["edge_followed_by"]["count"]
+          new_follow    = resp["user"]["edge_follow"]["count"]
+          message = ("You got %s Followers and you follow %s Accounts\n\n Last time you had %s Followers and you followed %s \nThats a difference of: %s \n\nThis day:\n %s/%s got followed\n %s/%s got liked\n %s/%s NewsFeed Media got liked\n %s/%s got unfollowed") %(new_following,new_follow,self.old_following,self.old_follow,new_following-self.old_following,self.follow_count,self.max_followers_per_hour*self.period_count,
+          self.like_count,self.max_likes_per_hour*self.period_count,self.like_newsfeed_count, self.max_like_newsfeed_per_hour*self.period_count,
+          self.unfollow_count,self.max_followers_per_hour*self.period_count)
+          
+                
+          
+          
+          self.old_following = new_following
+          self.old_follow    = new_follow
+          server = smtplib.SMTP("smtp.***REMOVED***", 587)
+          server.ehlo()
+          server.starttls()
       
-      server.login(self.email,self.email_pw)
-      msg = "\r\n".join([
-        "From: user_me@***REMOVED***",
-        "To: "+self.email,
-        "Subject: Instabot Daily Update",
-        "",
-        message
-        ]) 
-      server.sendmail("Instabot", self.email, msg)
-      
+          server.login(self.email,self.email_pw)
+          msg = "\r\n".join([
+          "From: user_me@***REMOVED***",
+          "To: "+self.email,
+          "Subject: Instabot Daily Update",
+          "",
+          message
+          ]) 
+          server.sendmail("Instabot", self.email, msg)
+      except:
+          exc_type, exc_obj, exc_tb = sys.exc_info()
+        
+          self.logger.error(str(exc_type)+" - "+ str(exc_obj.message)+" - "+ str(exc_tb.tb_lineno))
     def login(self):
       self.api = InstagramAPI(self.username,self.passwort,self.chromedriver_path)
       self.api.login()
@@ -288,14 +312,16 @@ class Instabot:
         self.start_time = time.time()
         self.end_time   = self.start_time + self.period
         self.day_count  = self.start_time + 60*60*24
+        #self.next_email = self.start_time + self.between_email
+        self.next_email = 0
         #self.day_count = 0
-        period_count    = 1
+        self.period_count    = 1
         tag_feed = {}
         tag_list = self.tag_list[:]
         tag = ""
         resp = self.collector.getUserInfo(self.username)
-        old_following = resp["user"]["edge_followed_by"]["count"]
-        old_follow    = resp["user"]["edge_follow"]["count"]
+        self.old_following = resp["user"]["edge_followed_by"]["count"]
+        self.old_follow    = resp["user"]["edge_follow"]["count"]
         self.logger.info("Follow every %i seconds"% (self.between_follow))
         self.logger.info("Unfollow every %i seconds"% (self.between_unfollow))
         self.logger.info("Like every %i seconds"% (self.between_like))
@@ -303,26 +329,20 @@ class Instabot:
         self.logger.info("Post every %i seconds"% (self.between_post))
         while True:
           if(time.time() > self.day_count):
-              try:
-                resp = self.collector.getUserInfo(self.username)
-                new_following = resp["user"]["edge_followed_by"]["count"]
-                new_follow    = resp["user"]["edge_follow"]["count"]
-                message = ("You got %s Followers and you follow %s Accounts\n\n Last time you had %s Followers and you followed %s \nThats a difference of: %s \n\nThis day:\n %s/%s got followed\n %s/%s got liked\n %s/%s NewsFeed Media got liked\n %s/%s got unfollowed") %(new_following,new_follow,old_following,old_follow,new_following-old_following,self.follow_count,self.max_followers_per_hour*period_count,
-                              self.like_count,self.max_likes_per_hour*period_count,self.like_newsfeed_count, self.max_like_newsfeed_per_hour*period_count,
-                              self.unfollow_count,self.max_followers_per_hour*period_count)
-                
-                
-                if(self.email != ""):
-                  self.send_email_notification(message)
-              except:
-                self.logger.info("Failed email notification")
-                
+             
               self.period_post_count = self.max_posts_per_day
+              self.send_email_count   = self.email_per_day
               self.day_count = time.time() + 60*60*24
+          if(self.next_email < time.time() and self.send_email_count > 0):
+            if(self.email != ""):
+             self.send_email_notification()
+            self.send_email_count -= 1
+            self.next_email = time.time()+self.between_email 
+              
           if(time.time() > self.end_time):
             self.reset_period_counter()
             self.end_time = time.time()+self.period
-            period_count += 1
+            self.period_count += 1
           if len(tag_feed) == 0:
             if len(tag_list) == 0:
               tag_list = self.tag_list[:]
@@ -355,7 +375,7 @@ class Instabot:
             self.follow_count += 1
             self.period_follow_count -= 1
             self.next_iteration["Follow"] = time.time() + self.between_follow
-            self.logger.info("Period Count : #%s"%(period_count))
+            
             #time.sleep(random.randint(7, 20))
           if time.time() > self.next_iteration["Like"] and self.period_like_count > 0 and self.like():
             self.like_count += 1
