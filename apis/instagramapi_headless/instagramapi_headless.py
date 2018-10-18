@@ -99,6 +99,9 @@ class InstagramAPI:
 
           self.driver.execute_script("window.scrollTo(0, 0)") 
           follow_button[0].click()
+          time.sleep(1)
+          unfollow = self.driver.find_elements_by_xpath("//button[.//text()='Unfollow']")
+          unfollow[0].click()
         except Exception as e:
             self.logger.error(e.message)
             self.driver.save_screenshot(self.screenshot_path+datetime.datetime.now().strftime(self.time_format))
@@ -124,7 +127,7 @@ class InstagramAPI:
             picture.click()
             time.sleep(3)
        
-            like = picture.find_elements_by_xpath("//a[@role='button']/span[text()='Like']/..")
+            like = picture.find_elements_by_xpath("//button[contains(@class,'coreSpriteHeartOpen')]")
             if(len(like) == 0):
                 return False
             like[0].click()
@@ -146,7 +149,7 @@ class InstagramAPI:
               self.driver.get(self.base_url)
               time.sleep(5)
           
-          like = self.driver.find_elements_by_xpath("//a[@role='button']/span[text()='Like']/..")
+          like = self.driver.find_elements_by_xpath("//button[contains(@class,'coreSpriteHeartOpen')]")
           if(len(like) == 0):
               return False
           to_like = random.choice(like)
@@ -163,7 +166,16 @@ class InstagramAPI:
           self.driver.save_screenshot(self.screenshot_path+datetime.datetime.now().strftime(self.time_format))
           return False
         return True
-    
+    def test(self):
+        try:
+          print(8/0)
+        except Exception as e:
+          exc_type, exc_obj, exc_tb = sys.exc_info()
+        
+          self.logger.error(str(exc_type)+" - "+ str(exc_obj.message)+" - "+ str(exc_tb.tb_lineno))
+          self.driver.save_screenshot(self.screenshot_path+datetime.datetime.now().strftime(self.time_format))
+          return False
+        return True
     
     
     

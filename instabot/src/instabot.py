@@ -33,7 +33,7 @@ class Instabot:
                  max_like_newsfeed_per_hour = 0,
                  max_followers_on_follower = 1000000,
                  min_followers_on_follower = 0,
-                 max_followers_to_follow_ratio = 1.3,
+                 max_followers_to_follow_ratio = 0.5,
                  blacklist_usertags        = [],
                  tag_list                   = ['hashtag'],
                  time_to_unfollow           = 3 * 60*60*24,
@@ -171,8 +171,9 @@ class Instabot:
         if resp["user"]["edge_followed_by"]["count"] > self.max_followers_on_follower:
           self.logger.info("%s has too many follower" % (resp["user"]["username"]))
           return False
-        if (resp["user"]["edge_followed_by"]["count"]/resp["user"]["edge_follow"]["count"]) > self.max_followers_to_follow_ratio:
-          self.logger.info("%s bad Follow Ratio(%f)" % (resp["user"]["username"],(resp["user"]["edge_followed_by"]["count"]/resp["user"]["edge_follow"]["count"])))
+        if (float(resp["user"]["edge_followed_by"]["count"])/resp["user"]["edge_follow"]["count"]) < self.max_followers_to_follow_ratio:
+       
+          self.logger.info("%s bad Follow Ratio(%f)" % (resp["user"]["username"],(float(resp["user"]["edge_followed_by"]["count"])/resp["user"]["edge_follow"]["count"])))
           return False
         if resp["user"]["edge_followed_by"]["count"] < self.min_followers_on_follower:
           self.logger.info("%s has too little follower" % (resp["user"]["username"]))
@@ -198,11 +199,13 @@ class Instabot:
         self.post_instagram_api.upload(path,(self.post_caption  %(img[1])))
 
     def like_newsfeed(self):
-     
-      return self.api.likeNewsFeedMedia()
-  
+      current_time = time.time()
+      if(self.api.likeNewsFeedMedia()):
+        self.next_iteration["Like_NewsFeed"] = current_time + self.between_like_newsfeed 
+        return True
+      return False
     def follow(self):
-     
+      current_time = time.time()
       to_follow_list = self.database.get_to_follows(liked=1)
       if(len(to_follow_list) == 0):
         to_follow_list = self.database.get_to_follows()
@@ -220,11 +223,11 @@ class Instabot:
         self.database.update_to_follow(follower[0],followed=1)
         
       self.logger.info("#%i Follow User %s" %(self.follow_count,follower[1])) 
-      
+      self.next_iteration["Follow"] = current_time = time.time() + self.between_follow
       return True
       
     def unfollow(self):
-     
+      current_time = time.time()
       unfollower_list = self.database.get_unfollows()
       
       if(len(unfollower_list) == 0):
@@ -234,6 +237,7 @@ class Instabot:
         self.database.delete_follower(unfollower[0])
         self.database.insert_blacklist(unfollower[0],unfollower[1])
         self.logger.info("#%i unfollow User %s"%(self.unfollow_count,unfollower[1])) 
+        self.next_iteration["Unfollow"] = current_time + self.between_unfollow
         return True
       else:
         self.database.delete_follower(unfollower[0])
@@ -241,6 +245,7 @@ class Instabot:
       
       
     def like(self):
+        current_time = time.time()
         to_follow_list = self.database.get_to_follows(followed=1)
         if(len(to_follow_list) == 0):
             to_follow_list = self.database.get_to_follows()
@@ -256,6 +261,7 @@ class Instabot:
         else:
             self.database.update_to_follow(follower[0],liked=1)
         self.logger.info("#%i Liked Random User Media %s" %(self.like_count,follower[1]))     
+        self.next_iteration["Like"] = current_time + self.between_like
         return True
     def get_random_tag(self,tag_list):
       return random.choice(tag_list)
@@ -295,7 +301,7 @@ class Instabot:
       self.api.login()
       self.database.connect()
       
-     # time.sleep(random.randint(15, 30))
+    
 
       self.post_instagram_api= InstapyCli(self.username,self.passwort)
     def reset_period_counter(self):
@@ -368,26 +374,21 @@ class Instabot:
             self.logger.info("#%i Liked NewsFeed" %(self.like_newsfeed_count))
             self.like_newsfeed_count += 1
             self.period_like_newsfeed_count -=1
-            self.next_iteration["Like_NewsFeed"] = time.time() + self.between_like_newsfeed 
-            #time.sleep(random.randint(3, 20))
+            
 
           if time.time() > self.next_iteration["Follow"] and self.period_follow_count > 0 and self.follow():
             self.follow_count += 1
             self.period_follow_count -= 1
-            self.next_iteration["Follow"] = time.time() + self.between_follow
-            
-            #time.sleep(random.randint(7, 20))
+           
           if time.time() > self.next_iteration["Like"] and self.period_like_count > 0 and self.like():
             self.like_count += 1
             self.period_like_count -= 1
-            self.next_iteration["Like"] = time.time() + self.between_like
-           
-            #time.sleep(random.randint(7, 20))  
+            
           if time.time() > self.next_iteration["Unfollow"] and self.period_unfollow_count > 0 and self.unfollow():  
             self.unfollow_count += 1
             self.period_unfollow_count -= 1
-            self.next_iteration["Unfollow"] = time.time() + self.between_unfollow
-            #time.sleep(random.randint(7, 20))
+           
+           
           time.sleep(3) 
          
        

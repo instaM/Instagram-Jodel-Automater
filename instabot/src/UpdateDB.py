@@ -110,6 +110,24 @@ for entry in follow_not_in_wl:
         print("Account will be unfollowed soon")
         db.insert_follower(entry,follow_not_in_wl[entry],0, 0, "sanitize")    
         
+
+print("Following accounts are  your whitelist(y = insert whitelist, n = insert not whitelist, x = abort")
+for entry in whitelist:
+    decision = ""
+    while(decision != 'y' and decision !='n' and decision != 'x'):
+        
+        decision = raw_input(whitelist[entry]+":")
+        
+    if(decision=="y"):
+        print("Inserted into whitelist")
+        db.insert_follower(entry,whitelist[entry],1, 0, "sanitize")
+    elif(decision == "n"):
+        print("Account will be unfollowed soon")
+        db.insert_follower(entry,whitelist[entry],0, 0, "sanitize")    
+    if(decision=="x"):
+        break
+        
+
 print("Following accounts are in not in your whitelist, but do follow you back(y = insert whitelist, n = insert not whitelist")
 for entry in simple_following:
     decision = ""
