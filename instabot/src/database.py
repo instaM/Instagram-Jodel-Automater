@@ -43,14 +43,14 @@ class InstaDB:
   def update_to_follow(self,uni_id, followed=0, liked=0):
     self.cur.execute("UPDATE %s SET followed=%i, liked=%i where uni_id=%s" % (self.to_follow,followed,liked,uni_id))
     self.con.commit()
-  def check_blacklist_refollow(self,uni_id):
+  def check_blacklist_refollow(self,uni_id,never_refollow):
    
     self.cur.execute("SELECT * from %s where uni_id='%s'" % (self.blacklist_re,uni_id))
     row = self.cur.fetchone()
     if not row : return True 
     expire_date = datetime.datetime.strptime(row[2],"%Y-%m-%d").date()
   
-    return expire_date < datetime.date.today()
+    return (expire_date < datetime.date.today()) and not never_refollow
   def check_following(self,uni_id):
    
     self.cur.execute("SELECT * from %s where uni_id='%s'" % (self.following,uni_id))

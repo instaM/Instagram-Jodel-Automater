@@ -9,15 +9,17 @@ sys.path.append(lib_path)
 lib_path = os.path.abspath(os.path.join(__file__, '..', '..','..', 'apis', 'instagramapi_headless'))
 
 sys.path.append(lib_path)
+
 from database import InstaDB
 from instagramapi_headless import InstagramAPI
 #from JodelBot import JodelBot
 from PIL import Image
-from instapy_cli.cli import InstapyCli
+#from instapy_cli.cli import InstapyCli
 import random
 import time
 import signal
 import atexit
+import errno
 from datacollector import Collector
 class Instabot:
     def __init__(self,
@@ -38,11 +40,13 @@ class Instabot:
                  tag_list                   = ['hashtag'],
                  time_to_unfollow           = 3 * 60*60*24,
                  days_to_refollow           = 300,
+                 never_refollow             = True,
                  chromedriver_path          ='C:\\Program Files (x86)\\Google\\Chrome\\Application\\chromedriver.exe',
                  email                      = "",
                  email_pw                   = "",
                  email_per_day              = 1,
-                 logging_path               = "../log/instalog.log"
+                 logging_path               = "../log/",
+                 log_name                   ="instalog.log"
                  ):
         
         self.email                      = email
@@ -61,6 +65,7 @@ class Instabot:
         self.max_followers_to_follow_ratio  = max_followers_to_follow_ratio
         self.time_to_unfollow           = time_to_unfollow
         self.days_to_refollow           = days_to_refollow
+        self.never_refollow             = never_refollow
         self.like_newsfeed_count        = 0
         self.like_count                 = 0
         self.follow_count               = 0
@@ -105,13 +110,28 @@ class Instabot:
         self.post_instagram_api         = None
         self.chromedriver_path          = chromedriver_path
         self.logging_path               = logging_path
+        self.log_name                   = log_name
         self.logger                     = logging.getLogger("instalog")
         signal.signal(signal.SIGTERM, self.cleanup)
         atexit.register(self.cleanup)
-        
+
+    def mkdir_p(self,path):
+
+        try:
+            os.makedirs(path, exist_ok=True)  # Python>3.2
+        except TypeError:
+            try:
+                os.makedirs(path)
+            except OSError as exc:  # Python >2.5
+                if exc.errno == errno.EEXIST and os.path.isdir(path):
+                    pass
+                else:
+                    raise
+
     def setup_logger(self):
+      self.mkdir_p(self.logging_path)
       self.logger.setLevel(logging.INFO)
-      hdlr = logging.FileHandler(self.logging_path, 'a')
+      hdlr = logging.FileHandler(self.logging_path+self.log_name, 'a')
       formatter = logging.Formatter('%(asctime)s  [%(levelname)s] %(lineno)d  -  [%(filename)s] %(funcName)s    [%(message)s]')
       hdlr.setFormatter(formatter)
       self.logger.addHandler(hdlr) 
@@ -148,7 +168,7 @@ class Instabot:
           return False
         if  self.database.check_following(info["owner"]["id"]):
           return False
-        if self.database.check_blacklist_refollow(info["owner"]["id"]) == False:
+        if self.database.check_blacklist_refollow(info["owner"]["id"],self.never_refollow) == False:
           return False
        
         resp = self.collector.getMediaInfo(info["shortcode"])
@@ -303,7 +323,7 @@ class Instabot:
       
     
 
-      self.post_instagram_api= InstapyCli(self.username,self.passwort)
+#      self.post_instagram_api= InstapyCli(self.username,self.passwort)
     def reset_period_counter(self):
       self.logger.info ("This time period #%i Media got liked"      %(self.max_likes_per_period-self.period_like_count))
       self.logger.info ("This time period #%i Accounts got followed"%(self.max_followers_per_period-self.period_follow_count))
