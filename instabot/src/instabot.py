@@ -357,7 +357,7 @@ class Instabot:
             del tag_list[tag_list.index(tag)]
             self.logger.info("Now search on #%s"%(tag))
             self.logger.info("Available Likes #%i"%(self.likes_per_tag_left[tag]))
-            tag_feed = self.collector.getHashtagFeed(tag,3)
+            tag_feed = self.collector.getHashtagFeed(tag,1)
           
           if (len(tag_feed) > 0):
             username = self.worthy(tag_feed[0])

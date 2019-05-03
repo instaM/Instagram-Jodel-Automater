@@ -109,6 +109,7 @@ class InstagramAPI:
         
         return True
     def likeRandomUserMedia(self,username):
+        self.logger.info("Liking user " + username)
         try:
             url = self.user_detail_url % (username)
              
@@ -119,6 +120,7 @@ class InstagramAPI:
            # post = self.driver.find_elements_by_tag_name('img')
            
             if(len(post) == 0):
+                self.logger.info("Did not find any pictures")
                 return False
            # picture = (((random.choice(post).find_element_by_xpath('..')
             #   .find_element_by_xpath('..')))
@@ -127,7 +129,7 @@ class InstagramAPI:
             picture.click()
             time.sleep(3)
        
-            like = picture.find_elements_by_xpath("//button[contains(@class,'coreSpriteHeartOpen')]")
+            like = picture.find_elements_by_xpath("//section/span[1]/button")
             if(len(like) == 0):
                 return False
             like[0].click()
