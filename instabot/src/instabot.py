@@ -150,10 +150,10 @@ class Instabot:
         return tag_list_left
         
     def containsBadKeyWord(self,name):
-      
+      print(name)
       for bad in self.blacklist_usertags:
         
-        if bad in name.encode('utf-8', 'ignore').lower(): 
+        if bad in name.lower():
           return bad
       return None
   
@@ -208,7 +208,50 @@ class Instabot:
         return False
         
       return False
-      
+
+    def worthy_friend(self, info):
+        try:
+
+
+            if self.database.check_to_follow(info["id"]) == True:
+                return False
+            if self.database.check_following(info["id"]):
+                return False
+            if self.database.check_blacklist_refollow(info["id"], self.never_refollow) == False:
+                return False
+
+            bad = self.containsBadKeyWord(info["username"])
+            if bad != None:
+                self.logger.info("%s contains %s !" % (info["username"], bad))
+                return False
+
+            bad = self.containsBadKeyWord(info["full_name"])
+            if bad != None:
+                self.logger.info("%s contains %s !" % (info["full_name"], bad))
+                return False
+
+            resp = self.collector.getUserInfo(info["username"])
+
+            if resp["user"]["edge_followed_by"]["count"] > self.max_followers_on_follower:
+                self.logger.info("%s has too many follower" % (resp["user"]["username"]))
+                return False
+            if (float(resp["user"]["edge_followed_by"]["count"]) / resp["user"]["edge_follow"][
+                "count"]) < self.max_followers_to_follow_ratio:
+                self.logger.info("%s bad Follow Ratio(%f)" % (resp["user"]["username"], (
+                            float(resp["user"]["edge_followed_by"]["count"]) / resp["user"]["edge_follow"]["count"])))
+                return False
+            if resp["user"]["edge_followed_by"]["count"] < self.min_followers_on_follower:
+                self.logger.info("%s has too little follower" % (resp["user"]["username"]))
+                return False
+
+            return resp["user"]["username"]
+        except Exception as e:
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+
+            self.logger.error(str(exc_type) + " - " + str(exc_obj.message) + " - " + str(exc_tb.tb_lineno))
+            return False
+
+        return False
     def post_picture(self):
         #self.logger.info(os.path.abspath(os.path.join(__file__)))
         self.get_post_api.scanTopPost(400)
@@ -343,6 +386,7 @@ class Instabot:
         #self.day_count = 0
         self.period_count    = 1
         tag_feed = {}
+        friend_feed = {}
         tag_list = self.tag_list[:]
         tag = ""
         resp = self.collector.getUserInfo(self.username)
@@ -378,13 +422,20 @@ class Instabot:
             self.logger.info("Now search on #%s"%(tag))
             self.logger.info("Available Likes #%i"%(self.likes_per_tag_left[tag]))
             tag_feed = self.collector.getHashtagFeed(tag,1)
-          
+          if len(friend_feed) == 0:
+            random_user = self.database.get_random_user()
+            self.logger.info("Now getting Friends from #%s" % (random_user))
+            friend_feed = self.api.getCommonUsers(random_user)
           if (len(tag_feed) > 0):
             username = self.worthy(tag_feed[0])
             if (username != False):
               self.database.insert_to_follow(tag_feed[0]["node"]["owner"]["id"],username,tag)
             del tag_feed[0]
-          
+          if(len(friend_feed) > 0):
+            username = self.worthy_friend(friend_feed[0])
+            if (username != False):
+              self.database.insert_to_follow(friend_feed[0]["id"],friend_feed[0]["username"],"friend")
+            del friend_feed[0]
           if time.time() > self.next_iteration["Post"] and self.period_post_count > 0:
               self.post_picture()
               self.logger.info("Posted picture!")

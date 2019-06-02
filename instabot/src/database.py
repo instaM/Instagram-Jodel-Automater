@@ -1,7 +1,8 @@
 import sqlite3
 import datetime
 import time 
-import os 
+import os
+import random
 class InstaDB:
   def __init__(self):
     self.blacklist_re = "blacklist_refollow"
@@ -64,6 +65,11 @@ class InstaDB:
     if not row : return False
    
     return True
+  def get_random_user(self):
+    self.cur.execute("SELECT * from %s" % (self.following))
+    row = self.cur.fetchall()
+
+    return random.choice(row)[1]
   def get_all_follow(self):
     self.cur.execute("SELECT * from %s" % (self.all_follow))
     row = self.cur.fetchall()
