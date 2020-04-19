@@ -34,5 +34,5 @@ class Analyzer:
     print(rating)
     print(count)
   
-anal = Analyzer("***REMOVED***","***REMOVED***")
+anal = Analyzer("***REMOVED***","***REMOVED***1")
 anal.getHashtagRating()  

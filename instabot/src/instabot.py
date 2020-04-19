@@ -342,13 +342,13 @@ class Instabot:
           
           self.old_following = new_following
           self.old_follow    = new_follow
-          server = smtplib.SMTP("smtp.***REMOVED***", 587)
+          server = smtplib.SMTP("smtp.gmail.com", 587)
           server.ehlo()
           server.starttls()
       
           server.login(self.email,self.email_pw)
           msg = "\r\n".join([
-          "From: user_me@***REMOVED***",
+          "From: user_me@gmail.com",
           "To: "+self.email,
           "Subject: Instabot Daily Update",
           "",
